@@ -551,4 +551,48 @@ namespace OpenXmlEx
         #endregion
 
     }
+    public class OpenXmlExStyleFont
+    {
+        public double FontSize { get; set; }
+        public string FontColorHex { get; set; }
+        public string FontName { get; set; }
+        public bool IsBoldFont { get; set; }
+        public bool IsItalicFont { get; set; }
+        
+    }
+
+    public class OpenXmlExStyleFill
+    {
+        public string FillColorHex { get; set; }
+        public PatternValues Pattern { get; set; }
+    }
+
+    public class OpenXmlExStyleBorder
+    {
+        public BorderStyleValues Style { get; set; }
+        public Color BorderColor { get; set; }
+
+    }
+    public class OpenXmlExStyleBorderGrand
+    {
+        public OpenXmlExStyleBorder LeftBorder { get; set; }
+        public OpenXmlExStyleBorder TopBorder { get; set; }
+        public OpenXmlExStyleBorder RightBorder { get; set; }
+        public OpenXmlExStyleBorder BottomBorder { get; set; }
+    }
+
+    public class OpenXmlExStyleCell
+    {
+        public uint FontStyleNum { get; set; }
+        public uint FillStyleNum { get; set; }
+        public uint BorderStyleNum { get; set; }
+        public bool WrapText { get; set; }
+
+        public HorizontalAlignmentValues HorizontalAlignment { get; set; }
+        public VerticalAlignmentValues VerticalAlignment { get; set; }
+
+        public CellFormat GetCellFormat() => new CellFormat(
+                new Alignment() {Horizontal = HorizontalAlignment, Vertical = VerticalAlignment, WrapText = WrapText })
+            {FontId = FontStyleNum, FillId = FillStyleNum, BorderId = BorderStyleNum, ApplyFont = true};
+    }
 }
