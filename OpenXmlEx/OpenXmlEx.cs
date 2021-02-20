@@ -39,10 +39,11 @@ namespace OpenXmlEx
         /// <inheritdoc />
         public OpenXmlEx(Stream PartStream, Encoding encoding) : base(PartStream, encoding) { }
 
-        public void InitStyles(IEnumerable<string> FontNames)
+        public void InitStyles(IEnumerable<string> FontNames, IEnumerable<System.Drawing.Color> Colors)
         {
             //var colors = Enum.GetValues(typeof(System.Drawing.Color)).;
-            var colors = Enum.GetValues(typeof(System.Drawing.Color)).Cast<System.Drawing.Color>();
+            var colors = Colors.ToArray();
+
             var hex_colors = colors.Select(HexConverter).ToArray();
             var fonts = FontNames.ToArray();
 
@@ -614,6 +615,5 @@ namespace OpenXmlEx
 
 
         #endregion
-
     }
 }

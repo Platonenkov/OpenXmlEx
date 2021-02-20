@@ -58,13 +58,13 @@ namespace OpenXmlEx.Styles
 
         private Border GetStyle()
         {
-            return new()
-            {
-                LeftBorder = LeftBorder.GetStyle<LeftBorder>(),
-                TopBorder = TopBorder.GetStyle<TopBorder>(),
-                RightBorder = RightBorder.GetStyle<RightBorder>(),
-                BottomBorder = BottomBorder.GetStyle<BottomBorder>()
-            };
+            return new(
+                new LeftBorder(LeftBorder.BorderColor) { Style = LeftBorder.BorderStyle },
+                new TopBorder(TopBorder.BorderColor) { Style = TopBorder.BorderStyle },
+                new RightBorder(RightBorder.BorderColor) { Style = RightBorder.BorderStyle },
+                new BottomBorder(BottomBorder.BorderColor) { Style = BottomBorder.BorderStyle },
+                Diagonal
+            );
         }
 
     }

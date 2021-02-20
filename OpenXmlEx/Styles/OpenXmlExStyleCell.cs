@@ -31,21 +31,19 @@ namespace OpenXmlEx.Styles
             V_Align = Enum.GetValues<VerticalAlignmentValues>();
         }
 
-        public static IEnumerable<OpenXmlExStyleCell> GetStyles()
+        public static void GetStyles()
         {
             var count = (uint)CellsFormats.Count;
 
             foreach (var fonts_value in OpenXmlExStyleFont.Fonts)
                 foreach (var fills_value in OpenXmlExStyleFill.Fills)
                     foreach (var borders_value in OpenXmlExStyleBorderGrand.Borders)
-                    {
                         foreach (var style in OpenXmlExStyleCell.Generate(fonts_value.Key, fills_value.Key, borders_value.Key))
                         {
-                            CellsFormats.Add(count ,style.GetCellFormat());
-
+                            CellsFormats.Add(count, style.GetCellFormat());
+                            count++;
                         }
 
-                    }
         }
         public static IEnumerable<OpenXmlExStyleCell> Generate(uint FontStyleNum, uint FillStyleNum, uint BorderStyleNum)
         {

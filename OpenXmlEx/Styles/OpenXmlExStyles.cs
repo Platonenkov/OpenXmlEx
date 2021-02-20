@@ -7,10 +7,10 @@ using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace OpenXmlEx.Styles
 {
-    public class OpenXmlExStyles
+    public static class OpenXmlExStyles
     {
 
-        public Stylesheet GetStylesheet()
+        public static Stylesheet GetStylesheet()
         {
             return new Stylesheet(
                 new Fonts(OpenXmlExStyleFont.Fonts.Values),
