@@ -6,30 +6,71 @@ using System.Text;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using Bold = DocumentFormat.OpenXml.Spreadsheet.Bold;
+using Border = DocumentFormat.OpenXml.Spreadsheet.Border;
+using BottomBorder = DocumentFormat.OpenXml.Spreadsheet.BottomBorder;
+using Color = DocumentFormat.OpenXml.Spreadsheet.Color;
+using Column = DocumentFormat.OpenXml.Spreadsheet.Column;
+using Columns = DocumentFormat.OpenXml.Spreadsheet.Columns;
+using Font = DocumentFormat.OpenXml.Spreadsheet.Font;
+using Fonts = DocumentFormat.OpenXml.Spreadsheet.Fonts;
+using FontSize = DocumentFormat.OpenXml.Spreadsheet.FontSize;
+using HorizontalAlignmentValues = DocumentFormat.OpenXml.Spreadsheet.HorizontalAlignmentValues;
+using LeftBorder = DocumentFormat.OpenXml.Spreadsheet.LeftBorder;
+using RightBorder = DocumentFormat.OpenXml.Spreadsheet.RightBorder;
+using TopBorder = DocumentFormat.OpenXml.Spreadsheet.TopBorder;
+using VerticalAlignmentValues = DocumentFormat.OpenXml.Spreadsheet.VerticalAlignmentValues;
+using System.Drawing.Text;
+using OpenXmlEx.Styles;
 
 namespace OpenXmlEx
 {
     public class OpenXmlEx : OpenXmlPartWriter
     {
         /// <inheritdoc />
-        public OpenXmlEx(OpenXmlPart OpenXmlPart) : base(OpenXmlPart)
-        {
-        }
+        public OpenXmlEx(OpenXmlPart OpenXmlPart) : base(OpenXmlPart) { }
 
         /// <inheritdoc />
-        public OpenXmlEx(OpenXmlPart OpenXmlPart, Encoding encoding) : base(OpenXmlPart, encoding)
-        {
-        }
+        public OpenXmlEx(OpenXmlPart OpenXmlPart, Encoding encoding) : base(OpenXmlPart, encoding) { }
 
         /// <inheritdoc />
-        public OpenXmlEx(Stream PartStream) : base(PartStream)
-        {
-        }
+        public OpenXmlEx(Stream PartStream) : base(PartStream) { }
 
         /// <inheritdoc />
-        public OpenXmlEx(Stream PartStream, Encoding encoding) : base(PartStream, encoding)
+        public OpenXmlEx(Stream PartStream, Encoding encoding) : base(PartStream, encoding) { }
+
+        public void InitStyles(IEnumerable<string> FontNames)
         {
+            //var colors = Enum.GetValues(typeof(System.Drawing.Color)).;
+            var colors = Enum.GetValues(typeof(System.Drawing.Color)).Cast<System.Drawing.Color>();
+            var hex_colors = colors.Select(HexConverter).ToArray();
+            var fonts = FontNames.ToArray();
+
+            foreach (var color in hex_colors)
+            {
+                OpenXmlExStyleFill.GetStyles(color);
+                
+                OpenXmlExStyleBorderGrand.GetStyles(color);
+
+                foreach (var font_name in fonts)
+                {
+                    OpenXmlExStyleFont.GetStyles(color, font_name);
+                }
+            }
+
+            OpenXmlExStyleCell.GetStyles();
+
+
+
         }
+
+        #region Colors
+
+        private static string HexConverter(System.Drawing.Color c) { return "#" + c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2"); }
+
+        private static string RGBConverter(System.Drawing.Color c) { return "RGB(" + c.R.ToString() + "," + c.G.ToString() + "," + c.B.ToString() + ")"; }
+
+        #endregion
 
         #region Extensions
 
@@ -53,13 +94,16 @@ namespace OpenXmlEx
         {
 
             #region Установка ширины колонок
+
             WriteStartElement(new Columns());
             foreach (var (first, last, width) in Settings)
                 WriteElement(new Column { Min = first, Max = last, Width = width });
             WriteEndElement();
+
             #endregion
 
         }
+
         /// <summary> Устанавливает параметры столбцов </summary>
         /// <param name="first">начальная колонка</param>
         /// <param name="last">конечная колонка</param>
@@ -72,9 +116,11 @@ namespace OpenXmlEx
             WriteStartElement(new Columns());
             WriteElement(new Column { Min = first, Max = last, Width = width });
             WriteEndElement();
+
             #endregion
 
         }
+
         /// <summary> Добавляет значение в ячейку документа </summary>
         /// <param name="text">текст для записи</param>
         /// <param name="CellNum">номер колонки</param>
@@ -82,13 +128,14 @@ namespace OpenXmlEx
         /// <param name="StyleIndex">силь</param>
         /// <param name="Type">тип данных</param>
         public void Add(string text, int CellNum, uint RowNum, uint StyleIndex = 0, CellValues Type = CellValues.String) =>
-            WriteElement(new Cell
-            {
-                CellReference = StringValue.FromString($"{GetColumnName(CellNum)}{RowNum}"),
-                CellValue = new CellValue(text),
-                DataType = Type,
-                StyleIndex = StyleIndex
-            });
+            WriteElement(
+                new Cell
+                {
+                    CellReference = StringValue.FromString($"{GetColumnName(CellNum)}{RowNum}"),
+                    CellValue = new CellValue(text),
+                    DataType = Type,
+                    StyleIndex = StyleIndex
+                });
 
         /// <summary> Печатает ячейки с одинаковым значением и стилем со столбца по столбец в одной и той же строке</summary>
         /// <param name="FirstColumn">колонка с которой начали печать</param>
@@ -97,6 +144,7 @@ namespace OpenXmlEx
         /// <param name="Style">стиль ячейки</param>
         public void PrintEmptyCells(int FirstColumn, int LastPrintColumn, uint RowNumber, uint Style = 0) =>
             PrintCells(FirstColumn, LastPrintColumn, RowNumber, string.Empty, Style);
+
         /// <summary> Печатает ячейки с одинаковым значением и стилем со столбца по столбец в одной и той же строке</summary>
         /// <param name="FirstColumn">колонка с которой начали печать</param>
         /// <param name="LastPrintColumn">последняя напечатанная колонка</param>
@@ -141,13 +189,14 @@ namespace OpenXmlEx
         {
             //Секция с фильтром часть-2 - подтвердение принадлежности к листу
             WriteStartElement(new DefinedNames());
-            WriteElement(new DefinedName
-            {
-                Name = "_xlnm._FilterDatabase",
-                LocalSheetId = 0U,
-                Hidden = true,
-                Text = $"{ListName}!${GetColumnName(FirstColumn)}${FirstRow}:${GetColumnName(LastColumn)}${LastRow}"
-            });
+            WriteElement(
+                new DefinedName
+                {
+                    Name = "_xlnm._FilterDatabase",
+                    LocalSheetId = 0U,
+                    Hidden = true,
+                    Text = $"{ListName}!${GetColumnName(FirstColumn)}${FirstRow}:${GetColumnName(LastColumn)}${LastRow}"
+                });
             WriteEndElement(); //Filter
         }
 
@@ -168,6 +217,7 @@ namespace OpenXmlEx
         #endregion
 
         #region Helper
+
         /// <summary> Словарь имен колонок excel </summary>
         private readonly Dictionary<int, string> _Columns = new(676);
 
@@ -176,40 +226,40 @@ namespace OpenXmlEx
         public Stylesheet GenerateStyleSheet() =>
             new Stylesheet(
                 new Fonts(
-                    new Font(                                                               // Стиль под номером 0 - Шрифт по умолчанию.
+                    new Font( // Стиль под номером 0 - Шрифт по умолчанию.
                         new FontSize() { Val = 11 },
                         new Color() { Rgb = new HexBinaryValue() { Value = "000000" } },
                         new FontName() { Val = "Times New Roman" }),
-                    new Font(                                                               // Стиль под номером 1 - Жирный шрифт Times New Roman.
+                    new Font( // Стиль под номером 1 - Жирный шрифт Times New Roman.
                         new Bold(),
                         new FontSize() { Val = 11 },
                         new Color() { Rgb = new HexBinaryValue() { Value = "000000" } },
                         new FontName() { Val = "Times New Roman" }),
-                    new Font(                                                               // Стиль под номером 2 - Шрифт Times New Roman размером 14.
+                    new Font( // Стиль под номером 2 - Шрифт Times New Roman размером 14.
                         new FontSize() { Val = 14 },
                         new Color() { Rgb = new HexBinaryValue() { Value = "000000" } },
                         new FontName() { Val = "Times New Roman" }),
-                    new Font(                                                               // Стиль под номером 3 - Calibri Шрифт по умолчанию.
+                    new Font( // Стиль под номером 3 - Calibri Шрифт по умолчанию.
                         new FontSize() { Val = 11 },
                         new Color() { Rgb = new HexBinaryValue() { Value = "000000" } },
                         new FontName() { Val = "Calibri" }),
-                    new Font(                                                               // Стиль под номером 4 - Жирный шрифт Calibri.
+                    new Font( // Стиль под номером 4 - Жирный шрифт Calibri.
                         new Bold(),
                         new FontSize() { Val = 11 },
                         new Color() { Rgb = new HexBinaryValue() { Value = "000000" } },
                         new FontName() { Val = "Calibri" }),
-                    new Font(                                                               // Стиль под номером 5 - Шрифт Calibri размером 14.
+                    new Font( // Стиль под номером 5 - Шрифт Calibri размером 14.
                         new FontSize() { Val = 14 },
                         new Color() { Rgb = new HexBinaryValue() { Value = "000000" } },
                         new FontName() { Val = "Calibri" }),
-                    new Font(                                                               // Стиль под номером 6 - Жирный шрифт Calibri 11.
+                    new Font( // Стиль под номером 6 - Жирный шрифт Calibri 11.
                         new Bold(),
                         new FontSize() { Val = 10 },
                         new Color() { Rgb = new HexBinaryValue() { Value = "000000" } },
                         new FontName() { Val = "Calibri" })
                 ),
                 new Fills(
-                    new Fill(                                                           // Стиль под номером 0 - Заполнение ячейки по умолчанию.
+                    new Fill( // Стиль под номером 0 - Заполнение ячейки по умолчанию.
                         new PatternFill() { PatternType = PatternValues.None }),
                     // Стиль под номером 1 - Заполнение ячейки серыми точками (хз как но 1 стиль всегда серые точки не важно от настроек
                     new Fill(
@@ -217,22 +267,22 @@ namespace OpenXmlEx
                                 new ForegroundColor() { Rgb = new HexBinaryValue() { Value = "FFFFA500" } }
                             )
                         { PatternType = PatternValues.Solid }),
-                    new Fill(                                                         // Стиль под номером 2 - Заполнение ячейки Оранжеваым цветом
+                    new Fill( // Стиль под номером 2 - Заполнение ячейки Оранжеваым цветом
                         new PatternFill(
                                 new ForegroundColor() { Rgb = new HexBinaryValue() { Value = "FB793D" } }
                             )
                         { PatternType = PatternValues.Solid }),
-                    new Fill(                                                         // Стиль под номером 3 - Заполнение ячейки серым
+                    new Fill( // Стиль под номером 3 - Заполнение ячейки серым
                         new PatternFill(
                                 new ForegroundColor() { Rgb = new HexBinaryValue() { Value = "CCC2A6" } }
                             )
                         { PatternType = PatternValues.Solid }),
-                    new Fill(                                                         // Стиль под номером 4 - Заполнение ячейки синим 
+                    new Fill( // Стиль под номером 4 - Заполнение ячейки синим 
                         new PatternFill(
                                 new ForegroundColor() { Rgb = new HexBinaryValue() { Value = "8FBCE6" } }
                             )
                         { PatternType = PatternValues.Solid }),
-                    new Fill(                                                         // Стиль под номером 5 - Заполнение ячейки светло зелёным 
+                    new Fill( // Стиль под номером 5 - Заполнение ячейки светло зелёным 
                         new PatternFill(
                                 new ForegroundColor() { Rgb = new HexBinaryValue() { Value = "10B23C" } }
                             )
@@ -240,13 +290,13 @@ namespace OpenXmlEx
                 )
                ,
                 new Borders(
-                    new Border(                                                         // Стиль под номером 0 - Грани.
+                    new Border( // Стиль под номером 0 - Грани.
                         new LeftBorder(),
                         new RightBorder(),
                         new TopBorder(),
                         new BottomBorder(),
                         new DiagonalBorder()),
-                    new Border(                                                         // Стиль под номером 1 - Грани
+                    new Border( // Стиль под номером 1 - Грани
                         new LeftBorder(
                                 new Color() { Auto = true }
                             )
@@ -264,7 +314,7 @@ namespace OpenXmlEx
                             )
                         { Style = BorderStyleValues.Medium },
                         new DiagonalBorder()),
-                    new Border(                                                         // Стиль под номером 2 - Грани.
+                    new Border( // Стиль под номером 2 - Грани.
                         new LeftBorder(
                                 new Color() { Auto = true }
                             )
@@ -282,7 +332,7 @@ namespace OpenXmlEx
                             )
                         { Style = BorderStyleValues.Thin },
                         new DiagonalBorder()),
-                    new Border(                                                         // Стиль под номером 3 - Dotted|Thin.
+                    new Border( // Стиль под номером 3 - Dotted|Thin.
                         new LeftBorder(
                                 new Color() { Auto = true }
                             )
@@ -300,7 +350,7 @@ namespace OpenXmlEx
                             )
                         { Style = BorderStyleValues.Dotted },
                         new DiagonalBorder()),
-                    new Border(                                                         // Стиль под номером 4 - Dotted.
+                    new Border( // Стиль под номером 4 - Dotted.
                         new LeftBorder(
                                 new Color() { Auto = true }
                             )
@@ -323,52 +373,58 @@ namespace OpenXmlEx
                     // Стиль под номером 0 - The default cell style.  (по умолчанию)
                     new CellFormat() { FontId = 0, FillId = 0, BorderId = 0 },
                     // Стиль под номером 1 - заголовки по центру оранж в рамке 
-                    new CellFormat(new Alignment()
-                    {
-                        Horizontal = HorizontalAlignmentValues.Center,
-                        Vertical = VerticalAlignmentValues.Center,
-                        WrapText = true
-                    })
+                    new CellFormat(
+                            new Alignment()
+                            {
+                                Horizontal = HorizontalAlignmentValues.Center,
+                                Vertical = VerticalAlignmentValues.Center,
+                                WrapText = true
+                            })
                     { FontId = 1, FillId = 2, BorderId = 1, ApplyFont = true },
                     // Стиль под номером 2 - заголовки по центру серые в рамке
-                    new CellFormat(new Alignment()
-                    {
-                        Horizontal = HorizontalAlignmentValues.Center,
-                        Vertical = VerticalAlignmentValues.Center,
-                        WrapText = true
-                    })
+                    new CellFormat(
+                            new Alignment()
+                            {
+                                Horizontal = HorizontalAlignmentValues.Center,
+                                Vertical = VerticalAlignmentValues.Center,
+                                WrapText = true
+                            })
                     { FontId = 1, FillId = 3, BorderId = 1, ApplyFont = true },
                     // Стиль под номером 3 - Оранж с фильром
-                    new CellFormat(new Alignment()
-                    {
-                        Horizontal = HorizontalAlignmentValues.Center,
-                        Vertical = VerticalAlignmentValues.Center,
-                        WrapText = true
-                    })
+                    new CellFormat(
+                            new Alignment()
+                            {
+                                Horizontal = HorizontalAlignmentValues.Center,
+                                Vertical = VerticalAlignmentValues.Center,
+                                WrapText = true
+                            })
                     { FontId = 1, FillId = 2, BorderId = 1, ApplyFont = true },
                     // Стиль под номером 4 - Серый с фильтром
-                    new CellFormat(new Alignment()
-                    {
-                        Horizontal = HorizontalAlignmentValues.Center,
-                        Vertical = VerticalAlignmentValues.Center,
-                        WrapText = true
-                    })
+                    new CellFormat(
+                            new Alignment()
+                            {
+                                Horizontal = HorizontalAlignmentValues.Center,
+                                Vertical = VerticalAlignmentValues.Center,
+                                WrapText = true
+                            })
                     { FontId = 1, FillId = 3, BorderId = 1, ApplyFont = true },
                     // Стиль под номером 5 - заголовки по центру синие в рамке
-                    new CellFormat(new Alignment()
-                    {
-                        Horizontal = HorizontalAlignmentValues.Center,
-                        Vertical = VerticalAlignmentValues.Center,
-                        WrapText = true
-                    })
+                    new CellFormat(
+                            new Alignment()
+                            {
+                                Horizontal = HorizontalAlignmentValues.Center,
+                                Vertical = VerticalAlignmentValues.Center,
+                                WrapText = true
+                            })
                     { FontId = 1, FillId = 4, BorderId = 1, ApplyFont = true },
                     // Стиль под номером 6 - Синий с фильтром
-                    new CellFormat(new Alignment()
-                    {
-                        Horizontal = HorizontalAlignmentValues.Center,
-                        Vertical = VerticalAlignmentValues.Center,
-                        WrapText = true
-                    })
+                    new CellFormat(
+                            new Alignment()
+                            {
+                                Horizontal = HorizontalAlignmentValues.Center,
+                                Vertical = VerticalAlignmentValues.Center,
+                                WrapText = true
+                            })
                     { FontId = 1, FillId = 4, BorderId = 1, ApplyFont = true },
                     // Стиль под номером 7 - рамка.
                     new CellFormat(new Alignment() { WrapText = true })
@@ -428,44 +484,49 @@ namespace OpenXmlEx
                     new CellFormat(new Alignment() { Horizontal = HorizontalAlignmentValues.Right, Vertical = VerticalAlignmentValues.Bottom, WrapText = true })
                     { FontId = 3, FillId = 0, BorderId = 4, ApplyFont = true },
                     // Стиль под номером 26 - заголовки по центру синие в рамке Dash
-                    new CellFormat(new Alignment()
-                    {
-                        Horizontal = HorizontalAlignmentValues.Center,
-                        Vertical = VerticalAlignmentValues.Center,
-                        WrapText = true
-                    })
+                    new CellFormat(
+                            new Alignment()
+                            {
+                                Horizontal = HorizontalAlignmentValues.Center,
+                                Vertical = VerticalAlignmentValues.Center,
+                                WrapText = true
+                            })
                     { FontId = 6, FillId = 4, BorderId = 3, ApplyFont = true },
                     // Стиль под номером 27 - заголовки по центру серые в рамке Dash
-                    new CellFormat(new Alignment()
-                    {
-                        Horizontal = HorizontalAlignmentValues.Center,
-                        Vertical = VerticalAlignmentValues.Center,
-                        WrapText = true
-                    })
+                    new CellFormat(
+                            new Alignment()
+                            {
+                                Horizontal = HorizontalAlignmentValues.Center,
+                                Vertical = VerticalAlignmentValues.Center,
+                                WrapText = true
+                            })
                     { FontId = 6, FillId = 3, BorderId = 3, ApplyFont = true },
                     // Стиль под номером 28 - заголовки по центру Оранж в рамке Dash
-                    new CellFormat(new Alignment()
-                    {
-                        Horizontal = HorizontalAlignmentValues.Center,
-                        Vertical = VerticalAlignmentValues.Center,
-                        WrapText = true
-                    })
+                    new CellFormat(
+                            new Alignment()
+                            {
+                                Horizontal = HorizontalAlignmentValues.Center,
+                                Vertical = VerticalAlignmentValues.Center,
+                                WrapText = true
+                            })
                     { FontId = 6, FillId = 2, BorderId = 3, ApplyFont = true },
                     // Стиль под номером 29 - заголовки по центру Зелёный в рамке Dash
-                    new CellFormat(new Alignment()
-                    {
-                        Horizontal = HorizontalAlignmentValues.Center,
-                        Vertical = VerticalAlignmentValues.Center,
-                        WrapText = true
-                    })
+                    new CellFormat(
+                            new Alignment()
+                            {
+                                Horizontal = HorizontalAlignmentValues.Center,
+                                Vertical = VerticalAlignmentValues.Center,
+                                WrapText = true
+                            })
                     { FontId = 6, FillId = 5, BorderId = 3, ApplyFont = true },
                     // Стиль под номером 30 - заголовки по центру чёрный в точку в рамке Dash
-                    new CellFormat(new Alignment()
-                    {
-                        Horizontal = HorizontalAlignmentValues.Center,
-                        Vertical = VerticalAlignmentValues.Center,
-                        WrapText = true
-                    })
+                    new CellFormat(
+                            new Alignment()
+                            {
+                                Horizontal = HorizontalAlignmentValues.Center,
+                                Vertical = VerticalAlignmentValues.Center,
+                                WrapText = true
+                            })
                     { FontId = 6, FillId = 1, BorderId = 3, ApplyFont = true }
 
                 )
@@ -475,6 +536,7 @@ namespace OpenXmlEx
         /// <param name="index">номер колонки</param>
         /// <returns></returns>
         public string GetColumnName(uint index) => GetColumnName((int)index);
+
         /// <summary> Возвращает строковое имя колонки по номеру (1 - А, 2 - В) </summary>
         /// <param name="index">номер колонки</param>
         /// <returns></returns>
@@ -505,6 +567,7 @@ namespace OpenXmlEx
         /// <returns></returns>
         public MergeCell MergeCells(int StartCell, int StartRow, int EndCell, int? EndRow = null)
             => new() { Reference = new StringValue($"{GetColumnName(StartCell)}{StartRow}:{GetColumnName(EndCell)}{EndRow ?? StartRow}") };
+
         /// <summary>
         /// Формирует объединенную ячейку для документа
         /// </summary>
@@ -515,6 +578,7 @@ namespace OpenXmlEx
         /// <returns></returns>
         public MergeCell MergeCells(int StartCell, uint StartRow, int EndCell, uint? EndRow = null)
             => new() { Reference = new StringValue($"{GetColumnName(StartCell)}{StartRow}:{GetColumnName(EndCell)}{EndRow ?? StartRow}") };
+
         /// <summary>
         /// Формирует объединенную ячейку для документа
         /// </summary>
@@ -525,6 +589,7 @@ namespace OpenXmlEx
         /// <returns></returns>
         public MergeCell MergeCells(uint StartCell, uint StartRow, uint EndCell, uint? EndRow = null)
             => new() { Reference = new StringValue($"{GetColumnName(StartCell)}{StartRow}:{GetColumnName(EndCell)}{EndRow ?? StartRow}") };
+
         /// <summary>
         /// Формирует объединенную ячейку для документа
         /// </summary>
@@ -550,49 +615,5 @@ namespace OpenXmlEx
 
         #endregion
 
-    }
-    public class OpenXmlExStyleFont
-    {
-        public double FontSize { get; set; }
-        public string FontColorHex { get; set; }
-        public string FontName { get; set; }
-        public bool IsBoldFont { get; set; }
-        public bool IsItalicFont { get; set; }
-        
-    }
-
-    public class OpenXmlExStyleFill
-    {
-        public string FillColorHex { get; set; }
-        public PatternValues Pattern { get; set; }
-    }
-
-    public class OpenXmlExStyleBorder
-    {
-        public BorderStyleValues Style { get; set; }
-        public Color BorderColor { get; set; }
-
-    }
-    public class OpenXmlExStyleBorderGrand
-    {
-        public OpenXmlExStyleBorder LeftBorder { get; set; }
-        public OpenXmlExStyleBorder TopBorder { get; set; }
-        public OpenXmlExStyleBorder RightBorder { get; set; }
-        public OpenXmlExStyleBorder BottomBorder { get; set; }
-    }
-
-    public class OpenXmlExStyleCell
-    {
-        public uint FontStyleNum { get; set; }
-        public uint FillStyleNum { get; set; }
-        public uint BorderStyleNum { get; set; }
-        public bool WrapText { get; set; }
-
-        public HorizontalAlignmentValues HorizontalAlignment { get; set; }
-        public VerticalAlignmentValues VerticalAlignment { get; set; }
-
-        public CellFormat GetCellFormat() => new CellFormat(
-                new Alignment() {Horizontal = HorizontalAlignment, Vertical = VerticalAlignment, WrapText = WrapText })
-            {FontId = FontStyleNum, FillId = FillStyleNum, BorderId = BorderStyleNum, ApplyFont = true};
     }
 }
