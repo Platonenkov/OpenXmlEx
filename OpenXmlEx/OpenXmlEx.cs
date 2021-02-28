@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,6 +23,7 @@ using TopBorder = DocumentFormat.OpenXml.Spreadsheet.TopBorder;
 using VerticalAlignmentValues = DocumentFormat.OpenXml.Spreadsheet.VerticalAlignmentValues;
 using System.Drawing.Text;
 using OpenXmlEx.Styles;
+using OpenXmlEx.Styles.Base;
 
 namespace OpenXmlEx
 {
@@ -589,10 +591,87 @@ namespace OpenXmlEx
         /// </summary>
         /// <param name="lvl">уровень группы</param>
         /// <returns></returns>
-        public OpenXmlAttribute[] GetCollapsedAttributes(int lvl = 1) => lvl == 0
+        public static OpenXmlAttribute[] GetCollapsedAttributes(int lvl = 1) => lvl == 0
             ? Array.Empty<OpenXmlAttribute>()
             : new[] { new OpenXmlAttribute("outlineLevel", string.Empty, $"{lvl}"), new OpenXmlAttribute("hidden", string.Empty, $"{lvl}") };
 
+
+        #endregion
+
+        #region Style Comparer
+
+        public uint FindStyleOrDefault(OpenXmlExStyle style)
+        {
+            IEnumerable<KeyValuePair<uint, OpenXmlExStyleCell>> values = Array.Empty<KeyValuePair<uint, OpenXmlExStyleCell>>();
+
+            #region Заливка
+
+            if(style.FillColor!=null)
+                values = Style.CellsStyles.Where(
+                    s=> s.Value.FillStyle.Value.FillColor.Key == style.FillColor.Value).AsEnumerable();
+            if(style.FillPattern!=null)
+                values = values.Where(
+                    s => s.Value.FillStyle.Value.FillPattern == style.FillPattern).AsEnumerable();
+
+            #endregion
+
+            #region Borders
+
+            if (style.BorderColor != null)
+                values = values.Where(
+                    s => s.Value.BorderStyle.Value.BorderColor.Key == style.BorderColor).AsEnumerable();
+            if (style.LeftBorderStyle != null)
+                values = values.Where(
+                    s => s.Value.BorderStyle.Value.LeftBorder.BorderStyle == style.LeftBorderStyle).AsEnumerable();
+            if (style.TopBorderStyle != null)
+                values = values.Where(
+                    s => s.Value.BorderStyle.Value.TopBorder.BorderStyle == style.TopBorderStyle).AsEnumerable();
+            if (style.RightBorderStyle != null)
+                values = values.Where(
+                    s => s.Value.BorderStyle.Value.RightBorder.BorderStyle == style.RightBorderStyle).AsEnumerable();
+            if (style.BottomBorderStyle != null)
+                values = values.Where(
+                    s => s.Value.BorderStyle.Value.BottomBorder.BorderStyle == style.BottomBorderStyle).AsEnumerable();
+
+
+            #endregion
+
+            #region Шрифт
+
+            if (style.FontSize!=null)
+                values = values.Where(
+                    s => s.Value.FontStyle.Value.FontSize == style.FontSize).AsEnumerable();
+            if(style.FontColor != null)
+                values = values.Where(
+                    s => s.Value.FontStyle.Value.FontColor.Key == style.FontColor).AsEnumerable();
+            if(string.IsNullOrWhiteSpace(style.FontName))
+                values = values.Where(
+                    s => s.Value.FontStyle.Value.FontName == style.FontName).AsEnumerable();
+            if(style.IsBoldFont != null)
+                values = values.Where(
+                    s => s.Value.FontStyle.Value.IsBoldFont == style.IsBoldFont).AsEnumerable();
+            if(style.IsItalicFont != null)
+                values = values.Where(
+                    s => s.Value.FontStyle.Value.IsItalicFont == style.IsItalicFont).AsEnumerable();
+
+            #endregion
+
+            #region Выравнивание
+
+            if (style.WrapText != null)
+                values = values.Where(
+                    s => s.Value.WrapText == style.WrapText).AsEnumerable();
+            if (style.HorizontalAlignment != null)
+                values = values.Where(
+                    s => s.Value.HorizontalAlignment == style.HorizontalAlignment).AsEnumerable();
+            if (style.VerticalAlignment != null)
+                values = values.Where(
+                    s => s.Value.VerticalAlignment == style.VerticalAlignment).AsEnumerable();
+
+            #endregion
+
+            return values.FirstOrDefault().Key;
+        }
 
         #endregion
     }

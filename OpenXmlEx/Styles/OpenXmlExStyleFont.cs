@@ -28,8 +28,7 @@ namespace OpenXmlEx.Styles
         public bool IsItalicFont { get; set; }
 
         #endregion
-
-
+        
         /// <summary> Генерирует default стиль </summary>
         /// <returns></returns>
         public static OpenXmlExStyleFont GetDefault() => new() // Стиль под номером 0 (default)

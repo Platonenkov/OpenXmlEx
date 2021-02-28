@@ -11,23 +11,23 @@ namespace OpenXmlEx.Styles
     public class OpenXmlExStyles
     {
         /// <summary> перечень всех комбинаций заливок стиля </summary>
-        public Dictionary<uint, OpenXmlExStyleFill> Fills = new() { { 0, OpenXmlExStyleFill.GetDefault() } };
+        public Dictionary<uint, OpenXmlExStyleFill> Fills { get; } = new() { { 0, OpenXmlExStyleFill.GetDefault() } };
 
         /// <summary> перечень всех комбинаций рамок стиля </summary>
-        public Dictionary<uint, OpenXmlExStyleBorderGrand> Borders = new() { { 0, OpenXmlExStyleBorderGrand.GetDefault() } };
+        public Dictionary<uint, OpenXmlExStyleBorderGrand> Borders { get; } = new() { { 0, OpenXmlExStyleBorderGrand.GetDefault() } };
         /// <summary> перечень всех генерированных стилей шрифта </summary>
         public Dictionary<uint, OpenXmlExStyleFont> Fonts { get; } = new() { { 0, OpenXmlExStyleFont.GetDefault() } };
 
         /// <summary> перечень всех генерированных стилей ячеек </summary>
-        public Dictionary<uint, OpenXmlExStyleCell> CellsFormats = new()
+        public Dictionary<uint, OpenXmlExStyleCell> CellsStyles { get; }= new()
         {
             {
                 0,
                 new OpenXmlExStyleCell()
                 {
-                    BorderStyleNum = 0,
-                    FillStyleNum = 0,
-                    FontStyleNum = 0,
+                    BorderStyle = new KeyValuePair<uint, OpenXmlExStyleBorderGrand>(0, OpenXmlExStyleBorderGrand.GetDefault()),
+                    FillStyle = new KeyValuePair<uint, OpenXmlExStyleFill>(0, OpenXmlExStyleFill.GetDefault()),
+                    FontStyle = new KeyValuePair<uint, OpenXmlExStyleFont>(0, OpenXmlExStyleFont.GetDefault()),
                     WrapText = false,
                     HorizontalAlignment = HorizontalAlignmentValues.Left,
                     VerticalAlignment = VerticalAlignmentValues.Center
@@ -106,9 +106,9 @@ namespace OpenXmlEx.Styles
             #region генератор стилей рамки
 
             var cells_formats = OpenXmlExStyleCell.GetStyles(Fills, Borders, Fonts);
-            var cell_count = (uint)CellsFormats.Count;
+            var cell_count = (uint)CellsStyles.Count;
             foreach (var cell in cells_formats)
-                CellsFormats.Add(cell_count++, cell);
+                CellsStyles.Add(cell_count++, cell);
 
             #endregion
 
@@ -121,6 +121,6 @@ namespace OpenXmlEx.Styles
                 new Fonts(Fonts.Values.Select(f => f.Font)),
                 new Fills(Fills.Values.Select(f => f.Fill)),
                 new Borders(Borders.Values.Select(b => b.Border)),
-                new CellFormats(CellsFormats.Values.Select(c => c.CellStyle)));
+                new CellFormats(CellsStyles.Values.Select(c => c.CellStyle)));
     }
 }

@@ -13,12 +13,13 @@ namespace OpenXmlEx.Styles
 
         #region Свойства класса для поиска
 
-        /// <summary> Номер стиля шрифтов </summary>
-        public uint FontStyleNum { get; set; }
-        /// <summary> Номер стиля заливки </summary>
-        public uint FillStyleNum { get; set; }
-        /// <summary> Номер стиля рамки </summary>
-        public uint BorderStyleNum { get; set; }
+        /// <summary> стиль шрифтов </summary>
+        public KeyValuePair<uint, OpenXmlExStyleFont> FontStyle { get; set; }
+        /// <summary> стиль заливки </summary>
+        public KeyValuePair<uint, OpenXmlExStyleFill> FillStyle { get; set; }
+        /// <summary> стиль рамки </summary>
+        public KeyValuePair<uint, OpenXmlExStyleBorderGrand> BorderStyle { get; set; }
+
         /// <summary> будет ли перенос текста в ячейке </summary>
         public bool WrapText { get; set; }
 
@@ -54,17 +55,20 @@ namespace OpenXmlEx.Styles
             from fonts_value in Fonts
             from fills_value in Fills
             from borders_value in Borders
-            from style in Generate(fonts_value.Key, fills_value.Key, borders_value.Key)
+            from style in Generate(fonts_value, fills_value, borders_value)
             select style;
 
         /// <summary>
         /// генерирует варианты комбинаций стиля ячейки на основе входных номеров стилей
         /// </summary>
-        /// <param name="FillStyleNum">номер стиля заливки</param>
-        /// <param name="BorderStyleNum">номер стиля рамки</param>
-        /// <param name="FontStyleNum">номер стиля шрифта</param>
+        /// <param name="Fill">стиль заливки</param>
+        /// <param name="Border">стиль рамки</param>
+        /// <param name="Font">стиль шрифта</param>
         /// <returns></returns>
-        private static IEnumerable<OpenXmlExStyleCell> Generate(uint FontStyleNum, uint FillStyleNum, uint BorderStyleNum)
+        private static IEnumerable<OpenXmlExStyleCell> Generate(
+            KeyValuePair<uint, OpenXmlExStyleFont> Font,
+            KeyValuePair<uint, OpenXmlExStyleFill> Fill,
+            KeyValuePair<uint, OpenXmlExStyleBorderGrand> Border)
         {
 
             foreach (var h_align in H_Align)
@@ -72,9 +76,9 @@ namespace OpenXmlEx.Styles
                     for (var wrap = 0; wrap < 2; wrap++)
                         yield return new OpenXmlExStyleCell()
                         {
-                            FontStyleNum = FontStyleNum,
-                            FillStyleNum = FillStyleNum,
-                            BorderStyleNum = BorderStyleNum,
+                            FontStyle = Font,
+                            FillStyle=Fill,
+                            BorderStyle = Border,
                             HorizontalAlignment = h_align,
                             VerticalAlignment = v_align,
                             WrapText = wrap == 1
@@ -84,7 +88,7 @@ namespace OpenXmlEx.Styles
         /// <returns></returns>
         private CellFormat GetCellStyle() => new(
                 new Alignment() { Horizontal = HorizontalAlignment, Vertical = VerticalAlignment, WrapText = WrapText })
-            { FontId = FontStyleNum, FillId = FillStyleNum, BorderId = BorderStyleNum, ApplyFont = true };
+            { FontId = FontStyle.Key, FillId = FillStyle.Key, BorderId = BorderStyle.Key, ApplyFont = true };
 
         #endregion
     }

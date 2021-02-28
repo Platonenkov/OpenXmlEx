@@ -20,7 +20,7 @@ namespace OpenXmlEx.Styles
             new PatternFill(
                     new ForegroundColor() { Rgb = new HexBinaryValue() { Value = FillColor.Value } }
                 )
-            { PatternType = Pattern });
+            { PatternType = FillPattern });
 
         #endregion
 
@@ -29,7 +29,7 @@ namespace OpenXmlEx.Styles
         /// <summary> Цвет заливки </summary>
         public KeyValuePair<Color, string> FillColor { get; set; }
         /// <summary> Стиль заливки </summary>
-        public PatternValues Pattern { get; set; }
+        public PatternValues FillPattern { get; set; }
 
         #endregion
 
@@ -50,14 +50,14 @@ namespace OpenXmlEx.Styles
             Patterns.Where(p => p != PatternValues.None).Select(pattern => new OpenXmlExStyleFill
             {
                 FillColor = color,
-                Pattern = pattern
+                FillPattern = pattern
             });
 
         /// <summary> Генерирует Default стиль заполнения </summary>
         /// <returns></returns>
         public static OpenXmlExStyleFill GetDefault() => new() // Стиль под номером 0 - Заполнение ячейки по умолчанию.
         {
-            Pattern = PatternValues.None,
+            FillPattern = PatternValues.None,
             FillColor = (new KeyValuePair<Color, string>(Color.Transparent, Color.Transparent.ToHexConverter()))
         };
 
