@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace OpenXmlEx.Styles
@@ -10,16 +11,15 @@ namespace OpenXmlEx.Styles
         /// <summary> Генерирует default  стиль для рамки </summary>
         public static OpenXmlExStyleBorder Default => new()
         {
-            BorderColor = new KeyValuePair<System.Drawing.Color, Color>(
-                System.Drawing.Color.Transparent,
-                new Color() {Rgb = System.Drawing.Color.Transparent.ToHexConverter()}),
+            BorderColor = new KeyValuePair<System.Drawing.Color, string>(System.Drawing.Color.Transparent, System.Drawing.Color.Transparent.ToHexConverter()),
             BorderStyle = BorderStyleValues.None
         };
         /// <summary> Стиль линии рамки </summary>
         public BorderStyleValues BorderStyle { get; set; }
 
+        public Color BorderColorXML => new() {Rgb = BorderColor.Value};
         /// <summary> цвет рамки </summary>
-        public KeyValuePair<System.Drawing.Color, Color> BorderColor { get; set; }
+        public KeyValuePair<System.Drawing.Color, string> BorderColor { get; set; }
 
         /// <summary> Стили рамок </summary>
         private static IEnumerable<BorderStyleValues> __BorderStyles;
@@ -29,24 +29,11 @@ namespace OpenXmlEx.Styles
         /// <summary> Генерирует варианты стиля рамки </summary>
         /// <param name="color">цвет</param>
         /// <returns></returns>
-        public static IEnumerable<OpenXmlExStyleBorder> GetStyles(KeyValuePair<System.Drawing.Color, string> color)
-        {
-            var (c, rgb) = color;
-
-            foreach (var border_style in BorderStyles)
+        public static IEnumerable<OpenXmlExStyleBorder> GetStyles(KeyValuePair<System.Drawing.Color, string> color) =>
+            BorderStyles.Select(border_style => new OpenXmlExStyleBorder()
             {
-                yield return new OpenXmlExStyleBorder()
-                {
-                    BorderColor = new KeyValuePair<System.Drawing.Color, Color>(c, new Color() { Rgb = rgb }),
-                    BorderStyle = border_style
-                };
-            }
-        }
-
-        public T GetStyle<T>() where T : BorderPropertiesType, new()
-        {
-            return new T { Style = BorderStyle, Color = BorderColor.Value };
-        }
-
+                BorderColor = color,
+                BorderStyle = border_style
+            });
     }
 }

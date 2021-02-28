@@ -52,26 +52,23 @@ namespace OpenXmlEx.Styles
         {
             var styles = OpenXmlExStyleBorder.GetStyles(color).ToArray();
 
-            foreach (var left in styles)
-                foreach (var top in styles)
-                    foreach (var right in styles)
-                        foreach (var bottom in styles)
-                            yield return new OpenXmlExStyleBorderGrand()
-                            {
-                                LeftBorder = left,
-                                TopBorder = top,
-                                RightBorder = right,
-                                BottomBorder = bottom,
-                                Border = new Border(
-                                    new LeftBorder(left.BorderColor.Value) { Style = left.BorderStyle },
-                                    new TopBorder(top.BorderColor.Value) { Style = top.BorderStyle },
-                                    new RightBorder(right.BorderColor.Value) { Style = right.BorderStyle },
-                                    new BottomBorder(bottom.BorderColor.Value) { Style = bottom.BorderStyle },
-                                    new DiagonalBorder()
-                                ),
-                                BorderColor = color
+            foreach (var border in styles)
+                yield return new OpenXmlExStyleBorderGrand()
+                {
+                    LeftBorder = border,
+                    TopBorder = border,
+                    RightBorder = border,
+                    BottomBorder = border,
+                    Border = new Border(
+                        new LeftBorder(border.BorderColorXML) { Style = border.BorderStyle },
+                        new TopBorder(border.BorderColorXML) { Style = border.BorderStyle },
+                        new RightBorder(border.BorderColorXML) { Style = border.BorderStyle },
+                        new BottomBorder(border.BorderColorXML) { Style = border.BorderStyle },
+                        new DiagonalBorder()
+                    ),
+                    BorderColor = color
 
-                            };
+                };
         }
 
         #endregion

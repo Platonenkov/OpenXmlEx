@@ -69,15 +69,26 @@ namespace OpenXmlEx.Styles
 
             var color_dic = colors.ToDictionary(c => c, c => c.ToHexConverter());
             var fonts = FontNames.ToArray();
+            var sizes = FontSizes.ToArray();
 
+#if DEBUG
+            Console.WriteLine($"Создание базовых таблиц для {color_dic.Count} цветов");
+#endif
             foreach (var color in color_dic)
             {
+#if DEBUG
+                Console.WriteLine($"работа с цветом {color.Key}");
+#endif
+
                 #region генератор стилей заливки
 
                 var fills = OpenXmlExStyleFill.GetStyles(color);
                 var fill_count = (uint)Fills.Count;
                 foreach (var fill in fills)
                     Fills.Add(fill_count++, fill);
+#if DEBUG
+                Console.WriteLine($"Имеется {Fills.Count} FILLS");
+#endif
 
                 #endregion
 
@@ -87,21 +98,33 @@ namespace OpenXmlEx.Styles
                 var borders_count = (uint)Borders.Count;
                 foreach (var border in borders)
                     Borders.Add(borders_count++, border);
+#if DEBUG
+                Console.WriteLine($"Имеется {Borders.Count} BORDERS");
+#endif
 
                 #endregion
 
                 #region генератор стилей шрифтов
-                var font_count = (uint)Fills.Count;
+                var font_count = (uint)Fonts.Count;
                 foreach (var font_name in fonts)
                 {
-                    var generated_fonts = OpenXmlExStyleFont.GetStyles(color, font_name, FontSizes);
+                    var generated_fonts = OpenXmlExStyleFont.GetStyles(color, font_name, sizes);
                     foreach (var font in generated_fonts)
                         Fonts.Add(font_count++, font);
                 }
+#if DEBUG
+                Console.WriteLine($"Имеется {Fonts.Count} FONTS");
+#endif
 
+#if DEBUG
+                Console.WriteLine($"Завершена работа с цветом {color.Key}");
+#endif
 
                 #endregion
             }
+#if DEBUG
+            Console.WriteLine($"Запуск генератора стилей ячеек из комбинаций");
+#endif
 
             #region генератор стилей рамки
 
@@ -111,8 +134,18 @@ namespace OpenXmlEx.Styles
                 CellsStyles.Add(cell_count++, cell);
 
             #endregion
+#if DEBUG
+            Console.WriteLine($"Завершение работы генератора стилей ячеек\nДобавлено {CellsStyles.Count} стилей");
+#endif
+
+#if DEBUG
+            Console.WriteLine($"Генерация стилей документа XML");
+#endif
 
             Styles = GetStylesheet();
+#if DEBUG
+            Console.WriteLine($"Завершение работы генератора стилей");
+#endif
         }
 
 
