@@ -1,24 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using DocumentFormat.OpenXml.Spreadsheet;
+using Color = System.Drawing.Color;
 
 namespace OpenXmlEx.Styles
 {
     /// <summary> Описывает стиль всех рамок у ячейки </summary>
     public class OpenXmlExStyleBorderGrand
     {
-        public static Dictionary<uint, Border> Borders = new()
-        {
-            {
-                0,
-                new Border( // Стиль под номером 0 - Грани.
-                    new LeftBorder(),
-                    new RightBorder(),
-                    new TopBorder(),
-                    new BottomBorder(),
-                    new DiagonalBorder())
-            }
-        };
+        /// <summary> Рамка OpenXML </summary>
+        public Border Border { get; set; }
+
+        #region Свойства рамки для поиска стиля
 
         /// <summary> левая рамка </summary>
         public OpenXmlExStyleBorder LeftBorder { get; set; }
@@ -28,24 +21,34 @@ namespace OpenXmlEx.Styles
         public OpenXmlExStyleBorder RightBorder { get; set; }
         /// <summary> нижняя рамка </summary>
         public OpenXmlExStyleBorder BottomBorder { get; set; }
-        /// <summary> диагональ рамка </summary>
-        public DiagonalBorder Diagonal { get; set; } = new();
+        /// <summary> цвет рамки </summary>
+        public KeyValuePair<Color, string> BorderColor { get; set; }
 
+        #endregion
 
-        public static void GetStyles(string color)
-        {
-            var count = (uint)Borders.Count;
-            foreach (var style in Generate(color))
-            {
-                Borders.Add(count, style.GetStyle());
-                count++;
-            }
-        }
+        #region Генераторы
 
-        /// <summary> Генерирует возможные комбинации стиля рамок </summary>
-        /// <param name="color">цвет рамки</param>
+        /// <summary> Генерирует default стиль рамки </summary>
         /// <returns></returns>
-        public static IEnumerable<OpenXmlExStyleBorderGrand> Generate(string color)
+        public static OpenXmlExStyleBorderGrand GetDefault() => new()
+        {
+            Border = new Border( // Стиль под номером 0 - Грани.
+                new LeftBorder(),
+                new RightBorder(),
+                new TopBorder(),
+                new BottomBorder(),
+                new DiagonalBorder()),
+            BorderColor = new KeyValuePair<Color, string>(Color.Transparent, Color.Transparent.ToHexConverter()),
+            LeftBorder = OpenXmlExStyleBorder.Default,
+            TopBorder = OpenXmlExStyleBorder.Default,
+            RightBorder = OpenXmlExStyleBorder.Default,
+            BottomBorder = OpenXmlExStyleBorder.Default,
+
+        };
+
+        /// <summary> Создаёт стили рамок на основе комбинаций, в заданном цвете </summary>
+        /// <param name="color">цвет рамки</param>
+        public static IEnumerable<OpenXmlExStyleBorderGrand> GetStyles(KeyValuePair<Color, string> color)
         {
             var styles = OpenXmlExStyleBorder.GetStyles(color).ToArray();
 
@@ -53,19 +56,24 @@ namespace OpenXmlEx.Styles
                 foreach (var top in styles)
                     foreach (var right in styles)
                         foreach (var bottom in styles)
-                            yield return new OpenXmlExStyleBorderGrand() { LeftBorder = left, TopBorder = top, RightBorder = right, BottomBorder = bottom };
+                            yield return new OpenXmlExStyleBorderGrand()
+                            {
+                                LeftBorder = left,
+                                TopBorder = top,
+                                RightBorder = right,
+                                BottomBorder = bottom,
+                                Border = new Border(
+                                    new LeftBorder(left.BorderColor.Value) { Style = left.BorderStyle },
+                                    new TopBorder(top.BorderColor.Value) { Style = top.BorderStyle },
+                                    new RightBorder(right.BorderColor.Value) { Style = right.BorderStyle },
+                                    new BottomBorder(bottom.BorderColor.Value) { Style = bottom.BorderStyle },
+                                    new DiagonalBorder()
+                                ),
+                                BorderColor = color
+
+                            };
         }
 
-        private Border GetStyle()
-        {
-            return new(
-                new LeftBorder(LeftBorder.BorderColor) { Style = LeftBorder.BorderStyle },
-                new TopBorder(TopBorder.BorderColor) { Style = TopBorder.BorderStyle },
-                new RightBorder(RightBorder.BorderColor) { Style = RightBorder.BorderStyle },
-                new BottomBorder(BottomBorder.BorderColor) { Style = BottomBorder.BorderStyle },
-                Diagonal
-            );
-        }
-
+        #endregion
     }
 }

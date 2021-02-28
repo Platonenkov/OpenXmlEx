@@ -28,50 +28,30 @@ namespace OpenXmlEx
     public class OpenXmlEx : OpenXmlPartWriter
     {
         /// <inheritdoc />
-        public OpenXmlEx(OpenXmlPart OpenXmlPart) : base(OpenXmlPart) { }
+        public OpenXmlEx(
+            OpenXmlPart OpenXmlPart,
+            IEnumerable<string> FontNames, IEnumerable<uint> FontSizes, IEnumerable<System.Drawing.Color> Colors)
+            : base(OpenXmlPart) => InitStyles(FontNames, FontSizes, Colors);
 
         /// <inheritdoc />
-        public OpenXmlEx(OpenXmlPart OpenXmlPart, Encoding encoding) : base(OpenXmlPart, encoding) { }
+        public OpenXmlEx(OpenXmlPart OpenXmlPart, Encoding encoding,
+            IEnumerable<string> FontNames, IEnumerable<uint> FontSizes, IEnumerable<System.Drawing.Color> Colors)
+            : base(OpenXmlPart, encoding) => InitStyles(FontNames, FontSizes, Colors);
 
         /// <inheritdoc />
-        public OpenXmlEx(Stream PartStream) : base(PartStream) { }
+        public OpenXmlEx(Stream PartStream,
+            IEnumerable<string> FontNames, IEnumerable<uint> FontSizes, IEnumerable<System.Drawing.Color> Colors)
+            : base(PartStream) => InitStyles(FontNames, FontSizes, Colors);
 
         /// <inheritdoc />
-        public OpenXmlEx(Stream PartStream, Encoding encoding) : base(PartStream, encoding) { }
+        public OpenXmlEx(Stream PartStream, Encoding encoding,
+            IEnumerable<string> FontNames, IEnumerable<uint> FontSizes, IEnumerable<System.Drawing.Color> Colors)
+            : base(PartStream, encoding) => InitStyles(FontNames, FontSizes, Colors);
 
-        public void InitStyles(IEnumerable<string> FontNames, IEnumerable<System.Drawing.Color> Colors)
-        {
-            //var colors = Enum.GetValues(typeof(System.Drawing.Color)).;
-            var colors = Colors.ToArray();
+        public OpenXmlExStyles Style { get; private set; }
+        private void InitStyles(IEnumerable<string> FontNames, IEnumerable<uint> FontSizes, IEnumerable<System.Drawing.Color> Colors)
+            => Style = new OpenXmlExStyles(FontNames, FontSizes, Colors);
 
-            var hex_colors = colors.Select(HexConverter).ToArray();
-            var fonts = FontNames.ToArray();
-
-            foreach (var color in hex_colors)
-            {
-                OpenXmlExStyleFill.GetStyles(color);
-                
-                OpenXmlExStyleBorderGrand.GetStyles(color);
-
-                foreach (var font_name in fonts)
-                {
-                    OpenXmlExStyleFont.GetStyles(color, font_name);
-                }
-            }
-
-            OpenXmlExStyleCell.GetStyles();
-
-
-
-        }
-
-        #region Colors
-
-        private static string HexConverter(System.Drawing.Color c) { return "#" + c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2"); }
-
-        private static string RGBConverter(System.Drawing.Color c) { return "RGB(" + c.R.ToString() + "," + c.G.ToString() + "," + c.B.ToString() + ")"; }
-
-        #endregion
 
         #region Extensions
 
@@ -218,10 +198,6 @@ namespace OpenXmlEx
         #endregion
 
         #region Helper
-
-        /// <summary> Словарь имен колонок excel </summary>
-        private readonly Dictionary<int, string> _Columns = new(676);
-
         /// <summary> Метод генерирует стили для ячеек </summary>
         /// <returns></returns>
         public Stylesheet GenerateStyleSheet() =>
@@ -532,6 +508,10 @@ namespace OpenXmlEx
 
                 )
             );
+
+        /// <summary> Словарь имен колонок excel </summary>
+        private readonly Dictionary<int, string> _Columns = new(676);
+
 
         /// <summary> Возвращает строковое имя колонки по номеру (1 - А, 2 - В) </summary>
         /// <param name="index">номер колонки</param>
