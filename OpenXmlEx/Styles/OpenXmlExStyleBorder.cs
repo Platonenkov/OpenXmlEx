@@ -23,6 +23,21 @@ namespace OpenXmlEx.Styles
 
         /// <summary> Стили рамок </summary>
         private static IEnumerable<BorderStyleValues> __BorderStyles;
+
+        #region Конструкторы
+
+        public OpenXmlExStyleBorder()
+        {
+            
+        }
+        public OpenXmlExStyleBorder(System.Drawing.Color StyleBorderColor, BorderStyleValues Style)
+        {
+            BorderColor = new KeyValuePair<System.Drawing.Color, string>(StyleBorderColor, StyleBorderColor.ToHexConverter());
+            BorderStyle = Style;
+        }
+
+
+        #endregion
         /// <summary> Стили рамок </summary>
         private static IEnumerable<BorderStyleValues> BorderStyles => __BorderStyles ??= Enum.GetValues<BorderStyleValues>();
 

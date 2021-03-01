@@ -11,6 +11,23 @@ namespace OpenXmlEx.Styles
     /// <summary> Описывает стиль текста </summary>
     public class OpenXmlExStyleFont
     {
+        #region Конструктор
+
+        public OpenXmlExStyleFont(string StyleFontName, double StyleFontSize, Color StyleFontColor, bool StyleIsBoldFont, bool StyleIsItalicFont)
+        {
+            FontName = string.IsNullOrWhiteSpace(StyleFontName) ? "Times New Roman" : StyleFontName;
+            FontSize = StyleFontSize;
+            FontColor = new KeyValuePair<Color, string>(StyleFontColor, StyleFontColor.ToHexConverter());
+            IsBoldFont = StyleIsBoldFont;
+            IsItalicFont = StyleIsItalicFont;
+        }
+
+        public OpenXmlExStyleFont()
+        {
+
+        }
+
+        #endregion
         /// <summary> Font OpenXML </summary>
         public Font Font => GetStyle();
 
@@ -28,7 +45,7 @@ namespace OpenXmlEx.Styles
         public bool IsItalicFont { get; set; }
 
         #endregion
-        
+
         /// <summary> Генерирует default стиль </summary>
         /// <returns></returns>
         public static OpenXmlExStyleFont GetDefault() => new() // Стиль под номером 0 (default)

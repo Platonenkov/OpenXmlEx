@@ -24,16 +24,22 @@ namespace Sample
             var fills = new[] { System.Drawing.Color.BlueViolet, System.Drawing.Color.Crimson };
             var sizes = new[] { 8U, 10U, 12U, 14U, 16U };
 
-            using var spread_sheet = SpreadsheetDocument.Create(FileName, SpreadsheetDocumentType.Workbook);
+            using var document = SpreadsheetDocument.Create(FileName, SpreadsheetDocumentType.Workbook);
             //using var stream = File.OpenWrite(FileName);
             // create the workbook
-            var workbook_part = spread_sheet.AddWorkbookPart();
-
+            var workbook_part = document.AddWorkbookPart();
             var wbsp = workbook_part.AddNewPart<WorkbookStylesPart>();
-            var writer = new OpenXmlEx.OpenXmlEx(wbsp,fonts,sizes,fills);
+            var styles = OpenXmlEx.OpenXmlEx.GetStyles(
+                new List<OpenXmlExStyle>()
+                {
+                    new OpenXmlExStyle() {FontColor = Color.Crimson, IsBoldFont = true},
+                    new OpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = Color.Red}
+                });
 
+            wbsp.Stylesheet = styles.Styles;
+            wbsp.Stylesheet.Save();
 
-            writer.WriteElement(writer.Style.Styles);
+            var writer = new OpenXmlEx.OpenXmlEx(wbsp, styles);
 
             writer.WriteStartElement(new Workbook());
             writer.WriteStartElement(new Sheets());
@@ -53,16 +59,11 @@ namespace Sample
                 new OpenXmlExStyle()
                 {
                     FontColor = Color.Crimson,
-                    FontSize = 10,
-                    IsBoldFont = true,
-                    LeftBorderStyle =  BorderStyleValues.Dashed,
-                    RightBorderStyle = BorderStyleValues.Dashed
+                    //FontSize = 20,
+                    //IsBoldFont = true,
+                    //LeftBorderStyle =  BorderStyleValues.Dashed,
+                    //RightBorderStyle = BorderStyleValues.Dashed
                 });
-            //var test_cell_style = writer.Style.CellsStyles.FirstOrDefault(
-            //    s => s.Value.FontStyle.Value.IsBoldFont
-            //         && s.Value.FontStyle.Value.FontSize == 10
-            //         && s.Value.FontStyle.Value.FontName == "Arial"
-            //         && s.Value.FontStyle.Value.FontColor.Key == Color.Crimson).Key;
 
             writer.Add("Test",3,3, test_cell_style);
 

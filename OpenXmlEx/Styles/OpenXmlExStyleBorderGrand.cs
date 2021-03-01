@@ -8,6 +8,29 @@ namespace OpenXmlEx.Styles
     /// <summary> Описывает стиль всех рамок у ячейки </summary>
     public class OpenXmlExStyleBorderGrand
     {
+        #region Конструкторы
+
+        public OpenXmlExStyleBorderGrand()
+        {
+            
+        }
+        public OpenXmlExStyleBorderGrand(
+            BorderStyleValues LeftBorderStyle,
+            BorderStyleValues TopBorderStyle,
+            BorderStyleValues RightBorderStyle,
+            BorderStyleValues BottomBorderStyle,
+            Color StyleBorderColor)
+        {
+            LeftBorder = new OpenXmlExStyleBorder(StyleBorderColor, LeftBorderStyle);
+            TopBorder = new OpenXmlExStyleBorder(StyleBorderColor, TopBorderStyle);
+            RightBorder = new OpenXmlExStyleBorder(StyleBorderColor, RightBorderStyle);
+            BottomBorder = new OpenXmlExStyleBorder(StyleBorderColor, BottomBorderStyle);
+
+            BorderColor = new KeyValuePair<Color, string>(StyleBorderColor, StyleBorderColor.ToHexConverter());
+        }
+
+        #endregion
+
         /// <summary> Рамка OpenXML </summary>
         public Border Border { get; set; }
 

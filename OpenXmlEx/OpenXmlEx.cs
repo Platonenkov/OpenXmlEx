@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,7 +20,6 @@ using LeftBorder = DocumentFormat.OpenXml.Spreadsheet.LeftBorder;
 using RightBorder = DocumentFormat.OpenXml.Spreadsheet.RightBorder;
 using TopBorder = DocumentFormat.OpenXml.Spreadsheet.TopBorder;
 using VerticalAlignmentValues = DocumentFormat.OpenXml.Spreadsheet.VerticalAlignmentValues;
-using System.Drawing.Text;
 using OpenXmlEx.Styles;
 using OpenXmlEx.Styles.Base;
 
@@ -29,6 +27,12 @@ namespace OpenXmlEx
 {
     public class OpenXmlEx : OpenXmlPartWriter
     {
+        public static OpenXmlExStyles GetStyles(IEnumerable<OpenXmlExStyle> styles) => new OpenXmlExStyles(styles);
+
+        public OpenXmlExStyles Style { get; private set; }
+
+        #region Конструкторы эксперементальная генерация
+
         /// <inheritdoc />
         public OpenXmlEx(
             OpenXmlPart OpenXmlPart,
@@ -50,9 +54,65 @@ namespace OpenXmlEx
             IEnumerable<string> FontNames, IEnumerable<uint> FontSizes, IEnumerable<System.Drawing.Color> Colors)
             : base(PartStream, encoding) => InitStyles(FontNames, FontSizes, Colors);
 
-        public OpenXmlExStyles Style { get; private set; }
         private void InitStyles(IEnumerable<string> FontNames, IEnumerable<uint> FontSizes, IEnumerable<System.Drawing.Color> Colors)
             => Style = new OpenXmlExStyles(FontNames, FontSizes, Colors);
+
+        #endregion
+
+        #region Конструкторы приоритет 1
+
+        /// <inheritdoc />
+        public OpenXmlEx(
+            OpenXmlPart OpenXmlPart,
+            OpenXmlExStyles styles)
+            : base(OpenXmlPart) => InitStyles(styles);
+
+        /// <inheritdoc />
+        public OpenXmlEx(OpenXmlPart OpenXmlPart, Encoding encoding,
+            OpenXmlExStyles styles)
+            : base(OpenXmlPart, encoding) => InitStyles(styles);
+
+        /// <inheritdoc />
+        public OpenXmlEx(Stream PartStream,
+            OpenXmlExStyles styles)
+            : base(PartStream) => InitStyles(styles);
+
+        /// <inheritdoc />
+        public OpenXmlEx(Stream PartStream, Encoding encoding,
+            OpenXmlExStyles styles)
+            : base(PartStream, encoding) => InitStyles(styles);
+
+        private void InitStyles(OpenXmlExStyles styles)
+            => Style = styles;
+
+        #endregion
+        #region Конструкторы приоритет 2
+
+        /// <inheritdoc />
+        public OpenXmlEx(
+            OpenXmlPart OpenXmlPart,
+            IEnumerable<OpenXmlExStyle> styles)
+            : base(OpenXmlPart) => InitStyles(styles);
+
+        /// <inheritdoc />
+        public OpenXmlEx(OpenXmlPart OpenXmlPart, Encoding encoding,
+            IEnumerable<OpenXmlExStyle> styles)
+            : base(OpenXmlPart, encoding) => InitStyles(styles);
+
+        /// <inheritdoc />
+        public OpenXmlEx(Stream PartStream,
+            IEnumerable<OpenXmlExStyle> styles)
+            : base(PartStream) => InitStyles(styles);
+
+        /// <inheritdoc />
+        public OpenXmlEx(Stream PartStream, Encoding encoding,
+            IEnumerable<OpenXmlExStyle> styles)
+            : base(PartStream, encoding) => InitStyles(styles);
+
+        private void InitStyles(IEnumerable<OpenXmlExStyle> styles)
+            => Style = new OpenXmlExStyles(styles);
+
+        #endregion
 
 
         #region Extensions
@@ -606,67 +666,37 @@ namespace OpenXmlEx
 
             #region Заливка
 
-            if(style.FillColor!=null)
-                values = Style.CellsStyles.Where(
-                    s=> s.Value.FillStyle.Value.FillColor.Key == style.FillColor.Value).AsEnumerable();
-            if(style.FillPattern!=null)
-                values = values.Where(
-                    s => s.Value.FillStyle.Value.FillPattern == style.FillPattern).AsEnumerable();
+            values = Style.CellsStyles.Where(s =>
+                (style.FillColor != null && s.Value.FillStyle.Value.FillColor.Key == style.FillColor.Value) &&
+                (style.FillPattern != null && s.Value.FillStyle.Value.FillPattern == style.FillPattern) &&
 
             #endregion
 
             #region Borders
 
-            if (style.BorderColor != null)
-                values = values.Where(
-                    s => s.Value.BorderStyle.Value.BorderColor.Key == style.BorderColor).AsEnumerable();
-            if (style.LeftBorderStyle != null)
-                values = values.Where(
-                    s => s.Value.BorderStyle.Value.LeftBorder.BorderStyle == style.LeftBorderStyle).AsEnumerable();
-            if (style.TopBorderStyle != null)
-                values = values.Where(
-                    s => s.Value.BorderStyle.Value.TopBorder.BorderStyle == style.TopBorderStyle).AsEnumerable();
-            if (style.RightBorderStyle != null)
-                values = values.Where(
-                    s => s.Value.BorderStyle.Value.RightBorder.BorderStyle == style.RightBorderStyle).AsEnumerable();
-            if (style.BottomBorderStyle != null)
-                values = values.Where(
-                    s => s.Value.BorderStyle.Value.BottomBorder.BorderStyle == style.BottomBorderStyle).AsEnumerable();
-
+                (style.BorderColor != null && s.Value.BorderStyle.Value.BorderColor.Key == style.BorderColor) &&
+                (style.LeftBorderStyle != null && s.Value.BorderStyle.Value.LeftBorder.BorderStyle == style.LeftBorderStyle) &&
+                (style.TopBorderStyle != null && s.Value.BorderStyle.Value.TopBorder.BorderStyle == style.TopBorderStyle) &&
+                (style.RightBorderStyle != null && s.Value.BorderStyle.Value.RightBorder.BorderStyle == style.RightBorderStyle) &&
+                (style.BottomBorderStyle != null && s.Value.BorderStyle.Value.BottomBorder.BorderStyle == style.BottomBorderStyle) &&
 
             #endregion
 
             #region Шрифт
 
-            if (style.FontSize!=null)
-                values = values.Where(
-                    s => s.Value.FontStyle.Value.FontSize == style.FontSize).AsEnumerable();
-            if(style.FontColor != null)
-                values = values.Where(
-                    s => s.Value.FontStyle.Value.FontColor.Key == style.FontColor).AsEnumerable();
-            if(string.IsNullOrWhiteSpace(style.FontName))
-                values = values.Where(
-                    s => s.Value.FontStyle.Value.FontName == style.FontName).AsEnumerable();
-            if(style.IsBoldFont != null)
-                values = values.Where(
-                    s => s.Value.FontStyle.Value.IsBoldFont == style.IsBoldFont).AsEnumerable();
-            if(style.IsItalicFont != null)
-                values = values.Where(
-                    s => s.Value.FontStyle.Value.IsItalicFont == style.IsItalicFont).AsEnumerable();
+                (style.FontSize != null && s.Value.FontStyle.Value.FontSize == style.FontSize) &&
+                (style.FontColor != null && s.Value.FontStyle.Value.FontColor.Key == style.FontColor) &&
+                (string.IsNullOrWhiteSpace(style.FontName) && s.Value.FontStyle.Value.FontName == style.FontName) &&
+                (style.IsBoldFont != null && s.Value.FontStyle.Value.IsBoldFont == style.IsBoldFont) &&
+                (style.IsItalicFont != null && s.Value.FontStyle.Value.IsItalicFont == style.IsItalicFont) &&
 
             #endregion
 
             #region Выравнивание
 
-            if (style.WrapText != null)
-                values = values.Where(
-                    s => s.Value.WrapText == style.WrapText).AsEnumerable();
-            if (style.HorizontalAlignment != null)
-                values = values.Where(
-                    s => s.Value.HorizontalAlignment == style.HorizontalAlignment).AsEnumerable();
-            if (style.VerticalAlignment != null)
-                values = values.Where(
-                    s => s.Value.VerticalAlignment == style.VerticalAlignment).AsEnumerable();
+                (style.WrapText != null && s.Value.WrapText == style.WrapText) &&
+                (style.HorizontalAlignment != null && s.Value.HorizontalAlignment == style.HorizontalAlignment) &&
+                (style.VerticalAlignment != null && s.Value.VerticalAlignment == style.VerticalAlignment));
 
             #endregion
 

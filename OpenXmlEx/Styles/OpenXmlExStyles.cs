@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DocumentFormat.OpenXml.Spreadsheet;
+using OpenXmlEx.Styles.Base;
 using Color = System.Drawing.Color;
 
 namespace OpenXmlEx.Styles
@@ -19,7 +20,7 @@ namespace OpenXmlEx.Styles
         public Dictionary<uint, OpenXmlExStyleFont> Fonts { get; } = new() { { 0, OpenXmlExStyleFont.GetDefault() } };
 
         /// <summary> перечень всех генерированных стилей ячеек </summary>
-        public Dictionary<uint, OpenXmlExStyleCell> CellsStyles { get; }= new()
+        public Dictionary<uint, OpenXmlExStyleCell> CellsStyles { get; } = new()
         {
             {
                 0,
@@ -55,6 +56,11 @@ namespace OpenXmlEx.Styles
         public OpenXmlExStyles()
         {
             GenerateStyles(new[] { "Times New Roman" }, new[] { 11U }, new[] { Color.Black });
+        }
+
+        public OpenXmlExStyles(IEnumerable<OpenXmlExStyle> styles)
+        {
+            GenerateStyles(styles);
         }
 
         #endregion
@@ -147,6 +153,80 @@ namespace OpenXmlEx.Styles
             Console.WriteLine($"Завершение работы генератора стилей");
 #endif
         }
+
+        private void Init(
+            string FontName, double? FontSize, Color? FontColor, bool? IsBoldFont, bool? IsItalicFont, //Шрифт
+            HorizontalAlignmentValues? HorizontalAlignment, VerticalAlignmentValues? VerticalAlignment, bool? WrapText, //выравнивание содержимого
+            BorderStyleValues? LeftBorderStyle, BorderStyleValues? TopBorderStyle, BorderStyleValues? RightBorderStyle, BorderStyleValues? BottomBorderStyle, Color? BorderColor, // рамка
+            Color? FillColor, PatternValues? FillPattern) //заливка
+        {
+
+        }
+        /// <summary> Генератор стилей </summary>
+        /// <param name="styles">стили заданные пользователем</param>
+        private void GenerateStyles(IEnumerable<OpenXmlExStyle> styles)
+        {
+#if DEBUG
+            Console.WriteLine($"Создание базовых таблиц стилей");
+#endif
+
+            foreach (var style in styles)
+            {
+                #region генератор стилей заливки
+
+                var fill = new OpenXmlExStyleFill(style.FillColor ?? default, style.FillPattern ?? PatternValues.None);
+                var fill_count = (uint)Fills.Count;
+                Fills.Add(fill_count, fill);
+
+                #endregion
+
+                #region генератор стилей рамки
+
+                var border = new OpenXmlExStyleBorderGrand(style.LeftBorderStyle ?? BorderStyleValues.None,
+                    style.TopBorderStyle ?? BorderStyleValues.None,
+                    style.RightBorderStyle ?? BorderStyleValues.None,
+                    style.BottomBorderStyle ?? BorderStyleValues.None,
+                    style.BorderColor ?? Color.Transparent);
+
+                var borders_count = (uint)Borders.Count;
+                Borders.Add(borders_count, border);
+
+                #endregion
+
+                #region генератор стилей шрифтов
+
+                var font_count = (uint)Fonts.Count;
+                var font = new OpenXmlExStyleFont(style.FontName, style.FontSize ?? 11, style.FontColor ?? Color.Black, style.IsBoldFont ?? false, style.IsItalicFont ?? false);
+                Fonts.Add(font_count, font);
+
+                #endregion
+            }
+#if DEBUG
+            Console.WriteLine($"Запуск генератора стилей ячеек из комбинаций");
+#endif
+
+            #region генератор стилей рамки
+
+            var cells_formats = OpenXmlExStyleCell.GetStyles(Fills, Borders, Fonts);
+            var cell_count = (uint)CellsStyles.Count;
+            foreach (var cell in cells_formats)
+                CellsStyles.Add(cell_count++, cell);
+
+            #endregion
+#if DEBUG
+            Console.WriteLine($"Завершение работы генератора стилей ячеек\nДобавлено {CellsStyles.Count} стилей");
+#endif
+
+#if DEBUG
+            Console.WriteLine($"Генерация стилей документа XML");
+#endif
+
+            Styles = GetStylesheet();
+#if DEBUG
+            Console.WriteLine($"Завершение работы генератора стилей");
+#endif
+        }
+
 
 
         private Stylesheet GetStylesheet() =>

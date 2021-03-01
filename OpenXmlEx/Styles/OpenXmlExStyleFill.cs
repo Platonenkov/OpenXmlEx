@@ -62,5 +62,21 @@ namespace OpenXmlEx.Styles
         };
 
         #endregion
+
+        #region Конструкторы
+
+        public OpenXmlExStyleFill()
+        {
+
+        }
+        public OpenXmlExStyleFill(Color StyleFillColor, PatternValues StyleFillPattern)
+        {
+            FillColor = new KeyValuePair<Color, string>(StyleFillColor, StyleFillColor.ToHexConverter());
+            FillPattern = StyleFillPattern;
+        }
+
+
+        #endregion
+
     }
 }
