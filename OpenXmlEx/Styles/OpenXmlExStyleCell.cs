@@ -43,6 +43,23 @@ namespace OpenXmlEx.Styles
 
         #region Генераторы
 
+        public OpenXmlExStyleCell()
+        {
+            
+        }
+
+        public OpenXmlExStyleCell(KeyValuePair<uint, OpenXmlExStyleFont> Font, 
+            KeyValuePair<uint, OpenXmlExStyleFill> Fill,
+            KeyValuePair<uint, OpenXmlExStyleBorderGrand> Border,
+            bool Wrap, HorizontalAlignmentValues h_align, VerticalAlignmentValues v_align)
+        {
+            FontStyle = Font;
+            FillStyle = Fill;
+            BorderStyle = Border;
+            HorizontalAlignment = h_align;
+            VerticalAlignment = v_align;
+            WrapText = Wrap;
+        }
         /// <summary>
         /// генерирует варианты комбинаций стиля ячейки на основе входных стилей
         /// </summary>

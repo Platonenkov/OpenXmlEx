@@ -662,19 +662,19 @@ namespace OpenXmlEx
 
         public uint FindStyleOrDefault(OpenXmlExStyle style)
         {
-            IEnumerable<KeyValuePair<uint, OpenXmlExStyleCell>> values = Array.Empty<KeyValuePair<uint, OpenXmlExStyleCell>>();
+
+            var values = Style.CellsStyles.Where(s =>
 
             #region Заливка
 
-            values = Style.CellsStyles.Where(s =>
-                (style.FillColor != null && s.Value.FillStyle.Value.FillColor.Key == style.FillColor.Value) &&
+                (style.FillColor != null && s.Value.FillStyle.Value.FillColor.Key.Equals(style.FillColor.Value)) &&
                 (style.FillPattern != null && s.Value.FillStyle.Value.FillPattern == style.FillPattern) &&
 
             #endregion
 
             #region Borders
 
-                (style.BorderColor != null && s.Value.BorderStyle.Value.BorderColor.Key == style.BorderColor) &&
+                (style.BorderColor != null && s.Value.BorderStyle.Value.BorderColor.Key.Equals(style.BorderColor)) &&
                 (style.LeftBorderStyle != null && s.Value.BorderStyle.Value.LeftBorder.BorderStyle == style.LeftBorderStyle) &&
                 (style.TopBorderStyle != null && s.Value.BorderStyle.Value.TopBorder.BorderStyle == style.TopBorderStyle) &&
                 (style.RightBorderStyle != null && s.Value.BorderStyle.Value.RightBorder.BorderStyle == style.RightBorderStyle) &&
@@ -685,7 +685,7 @@ namespace OpenXmlEx
             #region Шрифт
 
                 (style.FontSize != null && s.Value.FontStyle.Value.FontSize == style.FontSize) &&
-                (style.FontColor != null && s.Value.FontStyle.Value.FontColor.Key == style.FontColor) &&
+                (style.FontColor != null && s.Value.FontStyle.Value.FontColor.Key.Equals(style.FontColor)) &&
                 (string.IsNullOrWhiteSpace(style.FontName) && s.Value.FontStyle.Value.FontName == style.FontName) &&
                 (style.IsBoldFont != null && s.Value.FontStyle.Value.IsBoldFont == style.IsBoldFont) &&
                 (style.IsItalicFont != null && s.Value.FontStyle.Value.IsItalicFont == style.IsItalicFont) &&
@@ -699,6 +699,8 @@ namespace OpenXmlEx
                 (style.VerticalAlignment != null && s.Value.VerticalAlignment == style.VerticalAlignment));
 
             #endregion
+
+           // var t = Style.CellsStyles.Where(s => (style.FontColor != null && s.Value.FontStyle.Value.FontColor.Key.Equals(style.FontColor)));
 
             return values.FirstOrDefault().Key;
         }

@@ -200,22 +200,24 @@ namespace OpenXmlEx.Styles
                 Fonts.Add(font_count, font);
 
                 #endregion
+
+                #region генератор стилей рамки
+
+                var cells_format = new OpenXmlExStyleCell(new KeyValuePair<uint, OpenXmlExStyleFont>(font_count, font),
+                    new KeyValuePair<uint, OpenXmlExStyleFill>(fill_count, fill),
+                    new KeyValuePair<uint, OpenXmlExStyleBorderGrand>(borders_count, border),
+                    style.WrapText ?? false,
+                    style.HorizontalAlignment ?? HorizontalAlignmentValues.Left,
+                    style.VerticalAlignment ?? VerticalAlignmentValues.Center);
+
+                var cell_count = (uint)CellsStyles.Count;
+                CellsStyles.Add(cell_count, cells_format);
+
+                #endregion
+
+
+
             }
-#if DEBUG
-            Console.WriteLine($"Запуск генератора стилей ячеек из комбинаций");
-#endif
-
-            #region генератор стилей рамки
-
-            var cells_formats = OpenXmlExStyleCell.GetStyles(Fills, Borders, Fonts);
-            var cell_count = (uint)CellsStyles.Count;
-            foreach (var cell in cells_formats)
-                CellsStyles.Add(cell_count++, cell);
-
-            #endregion
-#if DEBUG
-            Console.WriteLine($"Завершение работы генератора стилей ячеек\nДобавлено {CellsStyles.Count} стилей");
-#endif
 
 #if DEBUG
             Console.WriteLine($"Генерация стилей документа XML");
