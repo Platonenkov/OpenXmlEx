@@ -69,31 +69,6 @@ namespace OpenXmlEx.Styles
 
         };
 
-        /// <summary> Создаёт стили рамок на основе комбинаций, в заданном цвете </summary>
-        /// <param name="color">цвет рамки</param>
-        public static IEnumerable<OpenXmlExStyleBorderGrand> GetStyles(KeyValuePair<Color, string> color)
-        {
-            var styles = OpenXmlExStyleBorder.GetStyles(color).ToArray();
-
-            foreach (var border in styles)
-                yield return new OpenXmlExStyleBorderGrand()
-                {
-                    LeftBorder = border,
-                    TopBorder = border,
-                    RightBorder = border,
-                    BottomBorder = border,
-                    Border = new Border(
-                        new LeftBorder(border.BorderColorXML) { Style = border.BorderStyle },
-                        new TopBorder(border.BorderColorXML) { Style = border.BorderStyle },
-                        new RightBorder(border.BorderColorXML) { Style = border.BorderStyle },
-                        new BottomBorder(border.BorderColorXML) { Style = border.BorderStyle },
-                        new DiagonalBorder()
-                    ),
-                    BorderColor = color
-
-                };
-        }
-
         #endregion
     }
 }

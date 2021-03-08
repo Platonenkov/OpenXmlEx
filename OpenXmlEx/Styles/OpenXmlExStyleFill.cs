@@ -44,15 +44,6 @@ namespace OpenXmlEx.Styles
 
         #region Генераторы
 
-        /// <summary> Генерирует варианты стиля на основе цвета </summary>
-        /// <param name="color">цвет</param>
-        public static IEnumerable<OpenXmlExStyleFill> GetStyles(KeyValuePair<Color, string> color) =>
-            Patterns.Where(p => p != PatternValues.None).Select(pattern => new OpenXmlExStyleFill
-            {
-                FillColor = color,
-                FillPattern = pattern
-            });
-
         /// <summary> Генерирует Default стиль заполнения </summary>
         /// <returns></returns>
         public static OpenXmlExStyleFill GetDefault() => new() // Стиль под номером 0 - Заполнение ячейки по умолчанию.

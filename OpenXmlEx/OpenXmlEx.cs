@@ -154,7 +154,7 @@ namespace OpenXmlEx
             }
             else
                 throw new CellException("Row not added to document, before writing to cell", RowNum, CellNum, GetColumnName(CellNum));
-
+            
             WriteElement(
                 new Cell
                 {

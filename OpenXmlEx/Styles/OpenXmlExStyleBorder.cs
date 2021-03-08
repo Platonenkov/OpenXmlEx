@@ -41,14 +41,5 @@ namespace OpenXmlEx.Styles
         /// <summary> Стили рамок </summary>
         private static IEnumerable<BorderStyleValues> BorderStyles => __BorderStyles ??= Enum.GetValues<BorderStyleValues>();
 
-        /// <summary> Генерирует варианты стиля рамки </summary>
-        /// <param name="color">цвет</param>
-        /// <returns></returns>
-        public static IEnumerable<OpenXmlExStyleBorder> GetStyles(KeyValuePair<System.Drawing.Color, string> color) =>
-            BorderStyles.Select(border_style => new OpenXmlExStyleBorder()
-            {
-                BorderColor = color,
-                BorderStyle = border_style
-            });
     }
 }

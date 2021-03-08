@@ -31,15 +31,15 @@ namespace Sample
 
             #region Styles
 
-            //var styles = OpenXmlEx.OpenXmlEx.GetStyles(
-            //    new List<OpenXmlExStyle>()
-            //    {
-            //        new OpenXmlExStyle() {FontColor = Color.Crimson, IsBoldFont = true},
-            //        new OpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = Color.Red}
-            //    });
+            var styles = OpenXmlEx.OpenXmlEx.GetStyles(
+                new List<OpenXmlExStyle>()
+                {
+                    new OpenXmlExStyle() {FontColor = Color.Crimson, IsBoldFont = true},
+                    new OpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = Color.Red}
+                });
 
-            //wbsp.Stylesheet = styles.Styles;
-            //wbsp.Stylesheet.Save();
+            wbsp.Stylesheet = styles.Styles;
+            wbsp.Stylesheet.Save();
 
             #endregion
 
@@ -97,7 +97,7 @@ namespace Sample
             #region 1 лист
 
 
-            var test_cell_style = writer.FindStyleOrDefault(
+            var (key, value) = writer.FindStyleOrDefault(
                 new OpenXmlExStyle()
                 {
                     FontColor = Color.Crimson,
@@ -107,11 +107,11 @@ namespace Sample
                     //RightBorderStyle = BorderStyleValues.Dashed
                 });
             writer.AddRow(3);
-            writer.AddCell("Test",3,3, test_cell_style.Key);
+            writer.AddCell("Test",3,3, key);
             writer.CloseRow(3);
             writer.AddRow(4);
-            writer.AddCell("Test",4,4, test_cell_style.Key);
-            writer.AddCell("Test",4,5, test_cell_style.Key);
+            writer.AddCell("Test",4,4, key);
+            writer.AddCell("Test",4,5, key);
             writer.CloseRow(4);
             writer.WriteEndElement(); //end of SheetData
 

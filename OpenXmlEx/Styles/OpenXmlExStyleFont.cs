@@ -63,26 +63,6 @@ namespace OpenXmlEx.Styles
 
         #region Генераторы
 
-        /// <summary> Генерирует варианты стиля шрифта </summary>
-        /// <param name="color">цвет</param>
-        /// <param name="fontName">иям шрифта</param>
-        /// <param name="FontSizes">Размерности шрифтов</param>
-        /// <returns></returns>
-        public static IEnumerable<OpenXmlExStyleFont> GetStyles(KeyValuePair<Color, string> color, string fontName, IEnumerable<uint> FontSizes)
-        {
-            foreach (var font_size in FontSizes)
-                for (var bold = 0; bold < 2; bold++)
-                    for (var italic = 0; italic < 2; italic++)
-                        yield return new OpenXmlExStyleFont
-                        {
-                            FontColor = color,
-                            FontName = fontName,
-                            FontSize = font_size,
-                            IsBoldFont = bold == 1,
-                            IsItalicFont = italic == 1
-                        };
-        }
-
         /// <summary> Генерирует стиль OpenXML для шрифта </summary>
         /// <returns></returns>
         private Font GetStyle() =>
