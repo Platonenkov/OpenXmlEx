@@ -660,49 +660,65 @@ namespace OpenXmlEx
 
         #region Style Comparer
 
-        public uint FindStyleOrDefault(OpenXmlExStyle style)
+
+
+        /// <summary>
+        /// Получить номер стиля похожего на искомый
+        /// </summary>
+        /// <param name="style">искомый стиль</param>
+        /// <returns></returns>
+        public uint FirstOrDefault(OpenXmlExStyle style) => FindStyleOrDefault(style).Key;
+
+        /// <summary>
+        /// Получить стиль и его номер, похожего на искомый
+        /// </summary>
+        /// <param name="style">искомый стиль</param>
+        /// <returns></returns>
+
+        public KeyValuePair<uint,OpenXmlExStyleCell> FindStyleOrDefault(OpenXmlExStyle style)
         {
+            if (style is null) return default;
 
-            var values = Style.CellsStyles.Where(s =>
+            return Style.CellsStyles.FirstOrDefault(
+                s =>
 
-            #region Заливка
+                    #region Заливка
 
-                (style.FillColor != null && s.Value.FillStyle.Value.FillColor.Key.Equals(style.FillColor.Value)) &&
-                (style.FillPattern != null && s.Value.FillStyle.Value.FillPattern == style.FillPattern) &&
+                    (style.FillColor is null || s.Value.FillStyle.Value.FillColor.Key.Equals(style.FillColor)) &&
+                    (style.FillPattern is null || s.Value.FillStyle.Value.FillPattern == style.FillPattern) &&
+
+                    #endregion
+
+                    #region Borders
+
+                    (style.BorderColor is null || s.Value.BorderStyle.Value.BorderColor.Key.Equals(style.BorderColor)) &&
+                    (style.LeftBorderStyle is null || s.Value.BorderStyle.Value.LeftBorder.BorderStyle == style.LeftBorderStyle) &&
+                    (style.TopBorderStyle is null || s.Value.BorderStyle.Value.TopBorder.BorderStyle == style.TopBorderStyle) &&
+                    (style.RightBorderStyle is null || s.Value.BorderStyle.Value.RightBorder.BorderStyle == style.RightBorderStyle) &&
+                    (style.BottomBorderStyle is null || s.Value.BorderStyle.Value.BottomBorder.BorderStyle == style.BottomBorderStyle) &&
+
+                    #endregion
+
+                    #region Шрифт
+
+                    (style.FontSize is null || s.Value.FontStyle.Value.FontSize == style.FontSize) &&
+                    (style.FontColor is null || s.Value.FontStyle.Value.FontColor.Key.Equals(style.FontColor)) &&
+                    (string.IsNullOrWhiteSpace(style.FontName) || s.Value.FontStyle.Value.FontName == style.FontName) &&
+                    (style.IsBoldFont is null || s.Value.FontStyle.Value.IsBoldFont == style.IsBoldFont) &&
+                    (style.IsItalicFont is null || s.Value.FontStyle.Value.IsItalicFont == style.IsItalicFont) &&
+
+                    #endregion
+
+                    #region Выравнивание
+
+                    (style.WrapText is null || s.Value.WrapText == style.WrapText) &&
+                    (style.HorizontalAlignment is null || s.Value.HorizontalAlignment == style.HorizontalAlignment) &&
+                    (style.VerticalAlignment is null || s.Value.VerticalAlignment == style.VerticalAlignment));
 
             #endregion
 
-            #region Borders
 
-                (style.BorderColor != null && s.Value.BorderStyle.Value.BorderColor.Key.Equals(style.BorderColor)) &&
-                (style.LeftBorderStyle != null && s.Value.BorderStyle.Value.LeftBorder.BorderStyle == style.LeftBorderStyle) &&
-                (style.TopBorderStyle != null && s.Value.BorderStyle.Value.TopBorder.BorderStyle == style.TopBorderStyle) &&
-                (style.RightBorderStyle != null && s.Value.BorderStyle.Value.RightBorder.BorderStyle == style.RightBorderStyle) &&
-                (style.BottomBorderStyle != null && s.Value.BorderStyle.Value.BottomBorder.BorderStyle == style.BottomBorderStyle) &&
 
-            #endregion
-
-            #region Шрифт
-
-                (style.FontSize != null && s.Value.FontStyle.Value.FontSize == style.FontSize) &&
-                (style.FontColor != null && s.Value.FontStyle.Value.FontColor.Key.Equals(style.FontColor)) &&
-                (string.IsNullOrWhiteSpace(style.FontName) && s.Value.FontStyle.Value.FontName == style.FontName) &&
-                (style.IsBoldFont != null && s.Value.FontStyle.Value.IsBoldFont == style.IsBoldFont) &&
-                (style.IsItalicFont != null && s.Value.FontStyle.Value.IsItalicFont == style.IsItalicFont) &&
-
-            #endregion
-
-            #region Выравнивание
-
-                (style.WrapText != null && s.Value.WrapText == style.WrapText) &&
-                (style.HorizontalAlignment != null && s.Value.HorizontalAlignment == style.HorizontalAlignment) &&
-                (style.VerticalAlignment != null && s.Value.VerticalAlignment == style.VerticalAlignment));
-
-            #endregion
-
-           // var t = Style.CellsStyles.Where(s => (style.FontColor != null && s.Value.FontStyle.Value.FontColor.Key.Equals(style.FontColor)));
-
-            return values.FirstOrDefault().Key;
         }
 
         #endregion
