@@ -16,7 +16,7 @@ namespace OpenXmlEx
 {
     public class OpenXmlEx : OpenXmlPartWriter
     {
-        public static OpenXmlExStyles GetStyles(IEnumerable<OpenXmlExStyle> styles) => new OpenXmlExStyles(styles);
+        public static OpenXmlExStyles GetStyles(IEnumerable<OpenXmlExStyle> styles) => new(styles);
 
         public OpenXmlExStyles Style { get; private set; }
 
@@ -80,6 +80,49 @@ namespace OpenXmlEx
 
         #endregion
 
+        #region Overrides of OpenXmlPartWriter
+        /// <summary>
+        /// Добавляет записи о новых элементах в словари
+        /// </summary>
+        /// <param name="elementObject">новый элемент</param>
+        /// <param name="closed">открытый или закрыт</param>
+        void AddIndex(OpenXmlElement elementObject, bool closed)
+        {
+            switch (elementObject)
+            {
+                case Row row:
+                    _Rows.Add(row.RowIndex, false);
+                    break;
+
+                case Cell cell:
+                    {
+                        var address = GetCellAddress(cell);
+                        if (address.Equals(default))
+                            return;
+                        _Cells.Add((address.rowNum, address.collNum), false);
+                        break;
+                    }
+            }
+
+        }
+
+        public override void WriteStartElement(OpenXmlElement elementObject, IEnumerable<OpenXmlAttribute> attributes)
+        {
+            base.WriteStartElement(elementObject, attributes);
+            AddIndex(elementObject, false);
+        }
+        public override void WriteStartElement(OpenXmlElement elementObject)
+        {
+            base.WriteStartElement(elementObject);
+            AddIndex(elementObject, false);
+        }
+        public override void WriteElement(OpenXmlElement elementObject)
+        {
+            base.WriteElement(elementObject);
+            AddIndex(elementObject, true);
+        }
+
+        #endregion
 
         #region Extensions
 
@@ -121,13 +164,15 @@ namespace OpenXmlEx
 
         /// <summary> Добавляет значение в ячейку документа </summary>
         /// <param name="text">текст для записи</param>
-        /// <param name="RowNum">номер строки</param>
         /// <param name="CellNum">номер колонки</param>
+        /// <param name="RowNum">номер строки</param>
         /// <param name="StyleIndex">индекс стиля</param>
         /// <param name="Type">тип данных</param>
         /// <param name="CanReWrite">разрешить перезапись данных (иначе при повторной записи в ячейку будет генерирование ошибки)</param>
-        public void AddCell(string text, uint RowNum, uint CellNum, uint StyleIndex = 0, CellValues Type = CellValues.String, bool CanReWrite = false)
+        public void AddCell(string text, uint CellNum, uint RowNum, uint StyleIndex = 0, CellValues Type = CellValues.String, bool CanReWrite = false)
         {
+            #region Проверки и ошибки
+
             //Проверка валидности номера строки или столбца (должны быть больше 0)
             if (CellNum == 0 || RowNum == 0)
             {
@@ -150,11 +195,13 @@ namespace OpenXmlEx
                 //Если запись в ячейку выше (левее) текущей
                 var last_cell = _Cells.Keys.Where(k => k.row == RowNum).Select(s => s.cell).LastOrDefault(c => c > CellNum);
                 if (last_cell != default)
-                    throw new CellException($"Record in cell number {CellNum}, that above last recorded cell with number {last_cell}- not available", RowNum, CellNum, GetColumnName(CellNum));
+                    throw new CellException($"Record in cell number {CellNum}, that above last recorded cell with number {last_cell} - not available", RowNum, CellNum, GetColumnName(CellNum));
             }
             else
                 throw new CellException("Row not added to document, before writing to cell", RowNum, CellNum, GetColumnName(CellNum));
-            
+
+            #endregion
+
             WriteElement(
                 new Cell
                 {
@@ -163,7 +210,6 @@ namespace OpenXmlEx
                     DataType = Type,
                     StyleIndex = StyleIndex
                 });
-            _Cells.Add(key, true);
         }
         /// <summary> Печатает ячейки с одинаковым значением и стилем со столбца по столбец в одной и той же строке</summary>
         /// <param name="FirstColumn">колонка с которой начали печать</param>
@@ -181,7 +227,9 @@ namespace OpenXmlEx
         /// <param name="Type">Тип входных данных</param>
         /// <param name="StyleIndex">стиль ячейки</param>
         /// <param name="CanReWrite">разрешить перезапись данных (иначе при повторной записи в ячейку будет генерирование ошибки)</param>
-        public void PrintCells(int FirstColumn, int LastPrintColumn, uint RowNumber, string Value, CellValues Type = CellValues.String, uint StyleIndex = 0, bool CanReWrite = false)
+        public void PrintCells(
+            int FirstColumn, int LastPrintColumn, uint RowNumber, string Value, CellValues Type = CellValues.String, uint StyleIndex = 0,
+            bool CanReWrite = false)
         {
             foreach (var i in Enumerable.Range(FirstColumn, LastPrintColumn - FirstColumn + 1))
             {
@@ -195,6 +243,7 @@ namespace OpenXmlEx
         /// Список записанных строк, со статусом (false - open, true - close)
         /// </summary>
         private readonly Dictionary<uint, bool> _Rows = new();
+
         /// <summary>
         /// Создаёт новую строку в документе
         /// Если предыдущая строка не закрыта - генерирует ошибку
@@ -202,7 +251,8 @@ namespace OpenXmlEx
         /// <param name="RowIndex">номер новой строки</param>
         /// <param name="CollapsedLvl">уровень группировки - 0 если без группировки</param>
         /// <param name="ClosePreviousIfOpen">задача закрыть предыдущую строку перед созданием новой</param>
-        public void AddRow(uint RowIndex, uint CollapsedLvl = 0, bool ClosePreviousIfOpen = false)
+        /// <param name="AddSkipedRows">Добавить пропущенные строки (если пишем 2-ю строку, а первую не записали - будет ошибка)</param>
+        public void AddRow(uint RowIndex, uint CollapsedLvl = 0, bool ClosePreviousIfOpen = false, bool AddSkipedRows = false)
         {
             switch (ClosePreviousIfOpen)
             {
@@ -216,9 +266,17 @@ namespace OpenXmlEx
                     throw new RowNotClosedException("You must close the previous line before writing a new one", RowIndex);
             }
 
+            var previous = _Rows.Keys.LastOrDefault();
+            if (previous > 0 && RowIndex - 1 != previous && !AddSkipedRows)
+                throw new RowException($"Rows must go in order, Last used row was {previous}", RowIndex);
+            if (AddSkipedRows)
+            {
+                for (var r = previous + 1; r < RowIndex; r++)
+                    WriteElement(new Row { RowIndex = r });
+            }
             WriteStartElement(new Row { RowIndex = RowIndex }, GetCollapsedAttributes(CollapsedLvl));
-            _Rows.Add(RowIndex, false);
         }
+
         /// <summary> Закрыть строку </summary>
         /// <param name="RowIndex">Номер строки</param>
         public void CloseRow(uint RowIndex)
@@ -296,22 +354,26 @@ namespace OpenXmlEx
 
         #region Helper
         /// <summary> Словарь имен колонок excel </summary>
-        private static readonly Dictionary<int, string> _Columns = new(676);
+        private static readonly Dictionary<uint, string> _Columns = new(676);
 
         /// <summary> Возвращает строковое имя колонки по номеру (1 - А, 2 - В) </summary>
         /// <param name="index">номер колонки</param>
         /// <returns></returns>
-        public static string GetColumnName(uint index) => GetColumnName((int)index);
+        public static string GetColumnName(int index) => GetColumnName((uint)index);
 
         /// <summary> Возвращает строковое имя колонки по номеру (1 - А, 2 - В) </summary>
         /// <param name="index">номер колонки</param>
         /// <returns></returns>
-        public static string GetColumnName(int index)
+        public static string GetColumnName(uint index) => GetColumnInfo(index).Value;
+        /// <summary> Возвращает строковое имя колонки по номеру (1 - А, 2 - В) </summary>
+        /// <param name="index">номер колонки</param>
+        /// <returns></returns>
+        public static KeyValuePair<uint, string> GetColumnInfo(uint index)
         {
             lock (_Columns)
             {
-                var int_col = index - 1;
-                if (_Columns.ContainsKey(int_col)) return _Columns[int_col];
+                var int_col = index - 1; //-1 так как в словаре индексы с 0, а в excel с 1
+                if (_Columns.ContainsKey(int_col)) return _Columns.FirstOrDefault(c => c.Key == int_col);
                 var int_first_letter = ((int_col) / 676) + 64;
                 var int_second_letter = ((int_col % 676) / 26) + 64;
                 var int_third_letter = (int_col % 26) + 65;
@@ -319,11 +381,35 @@ namespace OpenXmlEx
                 var SecondLetter = (int_second_letter > 64) ? (char)int_second_letter : ' ';
                 var ThirdLetter = (char)int_third_letter;
                 var s = string.Concat(FirstLetter, SecondLetter, ThirdLetter).Trim();
-                _Columns.Add(int_col, s);
-                return s;
+                var col = new KeyValuePair<uint, string>(int_col, s);
+                _Columns.Add(col.Key, col.Value);
+                return col;
             }
         }
 
+        public static (uint rowNum, uint collNum) GetCellAddress(Cell cell)
+        {
+
+            var cell_ref = cell.CellReference;
+            var column_name = string.Empty;
+            foreach (var simbol in cell_ref.Value)
+            {
+                if (!uint.TryParse(simbol.ToString(), out var r))
+                {
+                    column_name += simbol;
+                }
+                else
+                    break;
+            }
+            var can_get_num = uint.TryParse(cell_ref.Value.Split(column_name).LastOrDefault(), out var row_number);
+            if (!can_get_num)
+                return default;
+            lock (_Columns)
+            {
+                var col_number = _Columns.FirstOrDefault(c => c.Value == column_name).Key + 1; //+1 так как в словаре индексы с 0, а в excel с 1
+                return (row_number, col_number);
+            }
+        }
         #region MergedCell
 
         /// <summary>

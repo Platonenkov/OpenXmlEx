@@ -17,7 +17,7 @@ namespace OpenXmlEx.Styles
         /// <summary> Стиль линии рамки </summary>
         public BorderStyleValues BorderStyle { get; set; }
 
-        public Color BorderColorXML => new() {Rgb = BorderColor.Value};
+        public Color BorderColorXML => new() {Rgb = BorderColor.Value };
         /// <summary> цвет рамки </summary>
         public KeyValuePair<System.Drawing.Color, string> BorderColor { get; set; }
 
@@ -35,7 +35,6 @@ namespace OpenXmlEx.Styles
             BorderColor = new KeyValuePair<System.Drawing.Color, string>(StyleBorderColor, StyleBorderColor.ToHexConverter());
             BorderStyle = Style;
         }
-
 
         #endregion
         /// <summary> Стили рамок </summary>

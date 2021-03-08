@@ -11,13 +11,18 @@ namespace OpenXmlEx.Styles
 {
     public class OpenXmlExStyles
     {
+        #region стили  начиная с дефолтных (Обязательные 1 и 2 стили, второй всегда будет заливка Sepia)
+
+
+
+
         /// <summary> перечень всех комбинаций заливок стиля </summary>
-        public Dictionary<uint, OpenXmlExStyleFill> Fills { get; } = new() { { 0, OpenXmlExStyleFill.GetDefault() } };
+        public Dictionary<uint, OpenXmlExStyleFill> Fills { get; } = new() { { 0, OpenXmlExStyleFill.GetDefault() },{ 1, OpenXmlExStyleFill.GetDefault() } };
 
         /// <summary> перечень всех комбинаций рамок стиля </summary>
-        public Dictionary<uint, OpenXmlExStyleBorderGrand> Borders { get; } = new() { { 0, OpenXmlExStyleBorderGrand.GetDefault() } };
+        public Dictionary<uint, OpenXmlExStyleBorderGrand> Borders { get; } = new() { { 0, OpenXmlExStyleBorderGrand.GetDefault() },{ 1, OpenXmlExStyleBorderGrand.GetDefault() } };
         /// <summary> перечень всех генерированных стилей шрифта </summary>
-        public Dictionary<uint, OpenXmlExStyleFont> Fonts { get; } = new() { { 0, OpenXmlExStyleFont.GetDefault() } };
+        public Dictionary<uint, OpenXmlExStyleFont> Fonts { get; } = new() { { 0, OpenXmlExStyleFont.GetDefault() },{ 1, OpenXmlExStyleFont.GetDefault() } };
 
         /// <summary> перечень всех генерированных стилей ячеек </summary>
         public Dictionary<uint, OpenXmlExStyleCell> CellsStyles { get; } = new()
@@ -33,20 +38,38 @@ namespace OpenXmlEx.Styles
                     HorizontalAlignment = HorizontalAlignmentValues.Left,
                     VerticalAlignment = VerticalAlignmentValues.Center
                 }
+            },
+            {
+                1,
+                new OpenXmlExStyleCell()
+                {
+                    BorderStyle = new KeyValuePair<uint, OpenXmlExStyleBorderGrand>(0, OpenXmlExStyleBorderGrand.GetDefault()),
+                    FillStyle = new KeyValuePair<uint, OpenXmlExStyleFill>(0, OpenXmlExStyleFill.GetDefault()),
+                    FontStyle = new KeyValuePair<uint, OpenXmlExStyleFont>(0, OpenXmlExStyleFont.GetDefault()),
+                    WrapText = false,
+                    HorizontalAlignment = HorizontalAlignmentValues.Left,
+                    VerticalAlignment = VerticalAlignmentValues.Center
+                }
             }
         };
 
-        public Stylesheet Styles { get; set; }
+        #endregion
+
+        private Stylesheet _Styles { get; }
+        public Stylesheet Styles => _Styles;
 
         #region Конструкторы
 
         public OpenXmlExStyles()
         {
+            _Styles = GetStylesheet();
         }
 
         public OpenXmlExStyles(IEnumerable<OpenXmlExStyle> styles)
         {
             GenerateStyles(styles);
+            _Styles = GetStylesheet();
+
         }
 
         #endregion
@@ -100,20 +123,41 @@ namespace OpenXmlEx.Styles
 
                 #endregion
 
-
-
             }
-
-            Styles = GetStylesheet();
         }
 
 
 
-        private Stylesheet GetStylesheet() =>
-            new(
+        private Stylesheet GetStylesheet()
+        {
+            //var styles = new Stylesheet();
+            //var fonts = new Fonts();
+            //foreach (var font in Fonts.Values.Select(f => f.Font))
+            //    fonts.Append(font);
+
+            //var fills = new Fills();
+            //foreach (var fill in Fills.Values.Select(f => f.Fill))
+            //    fills.Append(fill);
+
+            //var borders = new Borders();
+            //foreach (var border in Borders.Values.Select(b => b.Border))
+            //    borders.Append(border);
+
+
+            //var cells = new CellFormats();
+            //foreach (var cell in CellsStyles.Values.Select(c => c.CellStyle))
+            //    cells.Append(cell);
+
+            //styles.Append(fonts);
+            //styles.Append(fills);
+            //styles.Append(borders);
+            //styles.Append(cells);
+            //return styles;
+            return new(
                 new Fonts(Fonts.Values.Select(f => f.Font)),
                 new Fills(Fills.Values.Select(f => f.Fill)),
                 new Borders(Borders.Values.Select(b => b.Border)),
                 new CellFormats(CellsStyles.Values.Select(c => c.CellStyle)));
+        }
     }
 }

@@ -32,7 +32,7 @@ namespace OpenXmlEx.Styles
         #endregion
 
         /// <summary> Рамка OpenXML </summary>
-        public Border Border { get; set; }
+        public Border Border => GetStyle();
 
         #region Свойства рамки для поиска стиля
 
@@ -51,16 +51,18 @@ namespace OpenXmlEx.Styles
 
         #region Генераторы
 
+        private Border GetStyle() => new(
+            new LeftBorder(LeftBorder.BorderColorXML) { Style = LeftBorder.BorderStyle },
+            new RightBorder(RightBorder.BorderColorXML) { Style = RightBorder.BorderStyle },
+            new TopBorder(TopBorder.BorderColorXML) { Style = TopBorder.BorderStyle },
+            new BottomBorder(BottomBorder.BorderColorXML) { Style = BottomBorder.BorderStyle },
+            new DiagonalBorder());
+
         /// <summary> Генерирует default стиль рамки </summary>
         /// <returns></returns>
         public static OpenXmlExStyleBorderGrand GetDefault() => new()
         {
-            Border = new Border( // Стиль под номером 0 - Грани.
-                new LeftBorder(),
-                new RightBorder(),
-                new TopBorder(),
-                new BottomBorder(),
-                new DiagonalBorder()),
+            // Стиль под номером 0 - Грани.
             BorderColor = new KeyValuePair<Color, string>(Color.Transparent, Color.Transparent.ToHexConverter()),
             LeftBorder = OpenXmlExStyleBorder.Default,
             TopBorder = OpenXmlExStyleBorder.Default,
@@ -70,5 +72,6 @@ namespace OpenXmlEx.Styles
         };
 
         #endregion
+
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -11,7 +12,7 @@ using Microsoft.Win32.SafeHandles;
 using OpenXmlEx;
 using OpenXmlEx.Styles;
 using OpenXmlEx.Styles.Base;
-using Color = System.Drawing.Color;
+using Color = DocumentFormat.OpenXml.Spreadsheet.Color;
 
 namespace Sample
 {
@@ -23,7 +24,13 @@ namespace Sample
             var fonts = new[] { "Times New Roman", "Calibri", "Arial" };
             var fills = new[] { System.Drawing.Color.BlueViolet, System.Drawing.Color.Crimson };
             var sizes = new[] { 8U, 10U, 12U, 14U, 16U };
+            
+            Test(FileName);
+            new Process {StartInfo = new ProcessStartInfo(FileName) {UseShellExecute = true}}.Start();
+        }
 
+        static void Test(string FileName)
+        {
             using var document = SpreadsheetDocument.Create(FileName, SpreadsheetDocumentType.Workbook);
             // create the workbook
             var workbook_part = document.AddWorkbookPart();
@@ -34,8 +41,8 @@ namespace Sample
             var styles = OpenXmlEx.OpenXmlEx.GetStyles(
                 new List<OpenXmlExStyle>()
                 {
-                    new OpenXmlExStyle() {FontColor = Color.Crimson, IsBoldFont = true},
-                    new OpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = Color.Red}
+                    new OpenXmlExStyle() {FontColor = System.Drawing.Color.Crimson, IsBoldFont = true},
+                    new OpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = System.Drawing.Color.Red}
                 });
 
             wbsp.Stylesheet = styles.Styles;
@@ -63,7 +70,7 @@ namespace Sample
             sheets.Append(sheet_1);
             #endregion
 
-            using var writer = new OpenXmlEx.OpenXmlEx(ws_part, new OpenXmlExStyles());
+            using var writer = new OpenXmlEx.OpenXmlEx(ws_part, styles);
 
             writer.WriteStartElement(new Worksheet());
 
@@ -100,25 +107,37 @@ namespace Sample
             var (key, value) = writer.FindStyleOrDefault(
                 new OpenXmlExStyle()
                 {
-                    FontColor = Color.Crimson,
+                    FontColor = System.Drawing.Color.Crimson,
                     //FontSize = 20,
                     //IsBoldFont = true,
                     //LeftBorderStyle =  BorderStyleValues.Dashed,
                     //RightBorderStyle = BorderStyleValues.Dashed
                 });
-            writer.AddRow(3);
-            writer.AddCell("Test",3,3, key);
-            writer.CloseRow(3);
-            writer.AddRow(4);
-            writer.AddCell("Test",4,4, key);
-            writer.AddCell("Test",4,5, key);
+            var c = new Cell
+            {
+                CellReference = StringValue.FromString($"{OpenXmlEx.OpenXmlEx.GetColumnName(850500)}{820500}"),
+                CellValue = new CellValue("text"),
+            };
+            var t = OpenXmlEx.OpenXmlEx.GetCellAddress(c);
+            writer.AddRow(1);
+
+            writer.AddCell("Test", 1, 1, 0);
+            writer.CloseRow(1);
+            writer.AddRow(4, 0, false, true);
+            writer.AddCell("Test", 4, 4, 1);
+            writer.AddCell("Test", 5, 4, 2);
+            writer.AddCell("Test", 6, 4, 3);
+
+            mer_list.Add(writer.MergeCells(6, 3, 10, 5));
+            writer.AddCell("Test", 7, 4, 3);
+
             writer.CloseRow(4);
             writer.WriteEndElement(); //end of SheetData
 
             #region Секция настроек
 
             //Секция с фильтром (нужно утвердить на листе)
-            writer.SetFilter(sheet_name, 1, 20, 3, 3);
+            writer.SetFilter(sheet_name, 1, 20, 3, 30);
 
             //Секция с объединенными ячейками должна быть в конце перед закрытием секции WorkSheet
             if (mer_list.Count > 0)
@@ -129,34 +148,8 @@ namespace Sample
             writer.WriteEndElement(); //end of worksheet
 
             #endregion
-        }
 
-        private static void Test(string FileName)
-        {
-            using var spread_sheet = SpreadsheetDocument.Create(FileName, SpreadsheetDocumentType.Workbook);
-            // create the workbook
-            var workbook_part = spread_sheet.AddWorkbookPart();
-
-            var wbsp = workbook_part.AddNewPart<WorkbookStylesPart>();
-            //wbsp.Stylesheet = helper.GenerateStyleSheet();
-            wbsp.Stylesheet.Save();
-
-
-            var workbook = workbook_part.Workbook = new Workbook();
-            var sheets = workbook.AppendChild(new Sheets());
-
-
-
-
-            // create worksheet 1
-            var first_sheet_name = "Faults";
-            var worksheet_part_1 = workbook_part.AddNewPart<WorksheetPart>();
-            var sheet_1 = new Sheet { Id = workbook_part.GetIdOfPart(worksheet_part_1), SheetId = 1, Name = first_sheet_name };
-            // ReSharper disable once PossiblyMistakenUseOfParamsMethod
-            sheets.Append(sheet_1);
-
-            var mer_list = new List<MergeCell>();
-            using var writer = OpenXmlWriter.Create(worksheet_part_1);
         }
     }
+
 }
