@@ -113,12 +113,19 @@ namespace Sample
                     //LeftBorderStyle =  BorderStyleValues.Dashed,
                     //RightBorderStyle = BorderStyleValues.Dashed
                 });
+
+
+            #region Get cell addres
+
             var c = new Cell
             {
-                CellReference = StringValue.FromString($"{OpenXmlEx.OpenXmlEx.GetColumnName(850500)}{820500}"),
+                CellReference = StringValue.FromString($"{OpenXmlEx.OpenXmlEx.GetColumnName(850)}{82}"),
                 CellValue = new CellValue("text"),
             };
             var t = OpenXmlEx.OpenXmlEx.GetCellAddress(c);
+
+            #endregion
+
             writer.AddRow(1);
 
             writer.AddCell("Test", 1, 1, 0);
