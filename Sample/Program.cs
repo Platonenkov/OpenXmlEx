@@ -25,34 +25,76 @@ namespace Sample
             var sizes = new[] { 8U, 10U, 12U, 14U, 16U };
 
             using var document = SpreadsheetDocument.Create(FileName, SpreadsheetDocumentType.Workbook);
-            //using var stream = File.OpenWrite(FileName);
             // create the workbook
             var workbook_part = document.AddWorkbookPart();
             var wbsp = workbook_part.AddNewPart<WorkbookStylesPart>();
-            var styles = OpenXmlEx.OpenXmlEx.GetStyles(
-                new List<OpenXmlExStyle>()
-                {
-                    new OpenXmlExStyle() {FontColor = Color.Crimson, IsBoldFont = true},
-                    new OpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = Color.Red}
-                });
 
-            wbsp.Stylesheet = styles.Styles;
-            wbsp.Stylesheet.Save();
+            #region Styles
 
-            var writer = new OpenXmlEx.OpenXmlEx(wbsp, styles);
+            //var styles = OpenXmlEx.OpenXmlEx.GetStyles(
+            //    new List<OpenXmlExStyle>()
+            //    {
+            //        new OpenXmlExStyle() {FontColor = Color.Crimson, IsBoldFont = true},
+            //        new OpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = Color.Red}
+            //    });
 
-            writer.WriteStartElement(new Workbook());
-            writer.WriteStartElement(new Sheets());
-            var first_sheet_name = "Faults";
-            var worksheet_part_1 = workbook_part.AddNewPart<WorksheetPart>();
-            writer.WriteElement(new Sheet { Id = workbook_part.GetIdOfPart(worksheet_part_1), SheetId = 1, Name = first_sheet_name });
-            
+            //wbsp.Stylesheet = styles.Styles;
+            //wbsp.Stylesheet.Save();
+
+            #endregion
+
+            #region document start
+
+            var workbook = workbook_part.Workbook = new Workbook();
+            var sheets = workbook.AppendChild(new Sheets());
+
+            #endregion
+
+
+            #region Sheet DATA
+
+            var sheet_name = "Test_sheet_name";
+            var ws_part = workbook_part.AddNewPart<WorksheetPart>();
+
+            // sheet
+            var sheet_1 = new Sheet { Id = workbook_part.GetIdOfPart(ws_part), SheetId = 1, Name = sheet_name };
+
+            // ReSharper disable once PossiblyMistakenUseOfParamsMethod
+            sheets.Append(sheet_1);
+            #endregion
+
+            using var writer = new OpenXmlEx.OpenXmlEx(ws_part, new OpenXmlExStyles());
+
+            writer.WriteStartElement(new Worksheet());
+
+            #region Надстройка страницы - кнопки группировки сверху
+
+            writer.SetGrouping(false, false);
+
+            #endregion
+
+            #region Установка ширины колонок
+
+            //Установка размеров колонок
+            var width_setting = new List<(uint First, uint Last, double width)>
+            {
+                (1, 2, 7),
+                (3, 3, 11),
+                (4, 12, 9.5),
+                (13, 13, 17),
+                (14, 14, 40),
+                (15, 16, 15),
+                (18, 20, 15)
+            };
+            writer.SetWidth(width_setting);
+
+            #endregion
+
+            writer.WriteStartElement(new SheetData());
+
             var mer_list = new List<MergeCell>();
 
             #region 1 лист
-
-            writer.WriteStartElement(new Worksheet());
-            writer.WriteStartElement(new SheetData());
 
 
             var test_cell_style = writer.FindStyleOrDefault(
@@ -64,17 +106,28 @@ namespace Sample
                     //LeftBorderStyle =  BorderStyleValues.Dashed,
                     //RightBorderStyle = BorderStyleValues.Dashed
                 });
-
-            writer.Add("Test",3,3, test_cell_style);
-
+            writer.AddRow(3);
+            writer.AddCell("Test",3,3, test_cell_style.Key);
+            writer.CloseRow(3);
+            writer.AddRow(4);
+            writer.AddCell("Test",4,4, test_cell_style.Key);
+            writer.AddCell("Test",4,5, test_cell_style.Key);
+            writer.CloseRow(4);
             writer.WriteEndElement(); //end of SheetData
+
+            #region Секция настроек
+
+            //Секция с фильтром (нужно утвердить на листе)
+            writer.SetFilter(sheet_name, 1, 20, 3, 3);
+
+            //Секция с объединенными ячейками должна быть в конце перед закрытием секции WorkSheet
+            if (mer_list.Count > 0)
+                writer.SetMergedList(mer_list);
+
+            #endregion
+
             writer.WriteEndElement(); //end of worksheet
-            writer.WriteEndElement(); //end of Sheets
-            writer.WriteEndElement(); //end of Workbook
 
-
-
-            writer.Close();
             #endregion
         }
 
