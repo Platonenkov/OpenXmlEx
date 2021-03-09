@@ -11,12 +11,13 @@ using Column = DocumentFormat.OpenXml.Spreadsheet.Column;
 using Columns = DocumentFormat.OpenXml.Spreadsheet.Columns;
 using OpenXmlEx.Styles;
 using OpenXmlEx.Styles.Base;
+using OpenXmlEx.SubClasses;
 
 namespace OpenXmlEx
 {
     public class OpenXmlWriterEx : OpenXmlPartWriter
     {
-        public static OpenXmlExStyles GetStyles(IEnumerable<OpenXmlExStyle> styles) => new(styles);
+        public static OpenXmlExStyles GetStyles(IEnumerable<BaseOpenXmlExStyle> styles) => new(styles);
 
         public OpenXmlExStyles Style { get; private set; }
 
@@ -55,25 +56,25 @@ namespace OpenXmlEx
         /// <inheritdoc />
         public OpenXmlWriterEx(
             OpenXmlPart OpenXmlPart,
-            IEnumerable<OpenXmlExStyle> styles)
+            IEnumerable<BaseOpenXmlExStyle> styles)
             : base(OpenXmlPart) => InitStyles(styles);
 
         /// <inheritdoc />
         public OpenXmlWriterEx(OpenXmlPart OpenXmlPart, Encoding encoding,
-            IEnumerable<OpenXmlExStyle> styles)
+            IEnumerable<BaseOpenXmlExStyle> styles)
             : base(OpenXmlPart, encoding) => InitStyles(styles);
 
         /// <inheritdoc />
         public OpenXmlWriterEx(Stream PartStream,
-            IEnumerable<OpenXmlExStyle> styles)
+            IEnumerable<BaseOpenXmlExStyle> styles)
             : base(PartStream) => InitStyles(styles);
 
         /// <inheritdoc />
         public OpenXmlWriterEx(Stream PartStream, Encoding encoding,
-            IEnumerable<OpenXmlExStyle> styles)
+            IEnumerable<BaseOpenXmlExStyle> styles)
             : base(PartStream, encoding) => InitStyles(styles);
 
-        private void InitStyles(IEnumerable<OpenXmlExStyle> styles)
+        private void InitStyles(IEnumerable<BaseOpenXmlExStyle> styles)
             => Style = new OpenXmlExStyles(styles);
 
         #endregion
@@ -122,6 +123,24 @@ namespace OpenXmlEx
             AddIndex(elementObject, true);
         }
 
+        public override void Close()
+        {
+            var (cell_key, cell_value) = _Cells.LastOrDefault();
+            if (cell_key!=default && !cell_value)
+            {
+                _Cells[cell_key] = true;
+                WriteEndElement();
+            }
+            var (row_key, row_value) = _Rows.LastOrDefault();
+            if (row_key!=default && !row_value)
+            {
+                CloseRow(row_key);
+            }
+
+            base.Close();
+
+        }
+
         #endregion
 
         #region Extensions
@@ -142,14 +161,14 @@ namespace OpenXmlEx
 
         /// <summary> Устанавливает параметры столбцов </summary>
         /// <param name="Settings">список надстроек для листа</param>
-        public void SetWidth(IEnumerable<(uint First, uint Last, double width)> Settings)
+        public void SetWidth(IEnumerable<WidthOpenXmlEx> Settings)
         {
 
             #region Установка ширины колонок
 
             WriteStartElement(new Columns());
-            foreach (var (first, last, width) in Settings)
-                WriteElement(new Column { Min = first, Max = last, Width = width });
+            foreach (var set in Settings)
+                WriteElement(new Column { Min = set.First, Max = set.Last, Width = set.Width });
             WriteEndElement();
 
             #endregion
@@ -477,7 +496,7 @@ namespace OpenXmlEx
         /// </summary>
         /// <param name="style">искомый стиль</param>
         /// <returns></returns>
-        public uint FirstOrDefault(OpenXmlExStyle style) => FindStyleOrDefault(style).Key;
+        public uint FirstOrDefault(BaseOpenXmlExStyle style) => FindStyleOrDefault(style).Key;
 
         /// <summary>
         /// Получить стиль и его номер, похожего на искомый
@@ -485,7 +504,7 @@ namespace OpenXmlEx
         /// <param name="style">искомый стиль</param>
         /// <returns></returns>
 
-        public KeyValuePair<uint, OpenXmlExStyleCell> FindStyleOrDefault(OpenXmlExStyle style)
+        public KeyValuePair<uint, OpenXmlExStyleCell> FindStyleOrDefault(BaseOpenXmlExStyle style)
         {
             if (style is null) return default;
 

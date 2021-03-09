@@ -8,4 +8,10 @@
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.12.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Errors\Cells\" />
+    <Folder Include="Errors\Rows\" />
+    <Folder Include="Errors\Sheets\" />
+  </ItemGroup>
+
 </Project>

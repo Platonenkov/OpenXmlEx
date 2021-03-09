@@ -12,6 +12,7 @@ using Microsoft.Win32.SafeHandles;
 using OpenXmlEx;
 using OpenXmlEx.Styles;
 using OpenXmlEx.Styles.Base;
+using OpenXmlEx.SubClasses;
 using Color = DocumentFormat.OpenXml.Spreadsheet.Color;
 
 namespace Sample
@@ -39,10 +40,10 @@ namespace Sample
             #region Styles
 
             var styles = OpenXmlWriterEx.GetStyles(
-                new List<OpenXmlExStyle>()
+                new List<BaseOpenXmlExStyle>()
                 {
-                    new OpenXmlExStyle() {FontColor = System.Drawing.Color.Crimson, IsBoldFont = true},
-                    new OpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = System.Drawing.Color.Red}
+                    new BaseOpenXmlExStyle() {FontColor = System.Drawing.Color.Crimson, IsBoldFont = true},
+                    new BaseOpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = System.Drawing.Color.Red}
                 });
 
             wbsp.Stylesheet = styles.Styles;
@@ -56,7 +57,6 @@ namespace Sample
             var sheets = workbook.AppendChild(new Sheets());
 
             #endregion
-
 
             #region Sheet DATA
 
@@ -83,15 +83,15 @@ namespace Sample
             #region Установка ширины колонок
 
             //Установка размеров колонок
-            var width_setting = new List<(uint First, uint Last, double width)>
+            var width_setting = new List<WidthOpenXmlEx>
             {
-                (1, 2, 7),
-                (3, 3, 11),
-                (4, 12, 9.5),
-                (13, 13, 17),
-                (14, 14, 40),
-                (15, 16, 15),
-                (18, 20, 15)
+               new (1, 2, 7),
+               new (3, 3, 11),
+               new (4, 12, 9.5),
+               new (13, 13, 17),
+               new (14, 14, 40),
+               new (15, 16, 15),
+               new (18, 20, 15)
             };
             writer.SetWidth(width_setting);
 
@@ -105,7 +105,7 @@ namespace Sample
 
 
             var (key, value) = writer.FindStyleOrDefault(
-                new OpenXmlExStyle()
+                new BaseOpenXmlExStyle()
                 {
                     FontColor = System.Drawing.Color.Crimson,
                     //FontSize = 20,

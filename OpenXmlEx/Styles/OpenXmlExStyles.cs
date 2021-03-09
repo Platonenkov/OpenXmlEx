@@ -65,7 +65,7 @@ namespace OpenXmlEx.Styles
             _Styles = GetStylesheet();
         }
 
-        public OpenXmlExStyles(IEnumerable<OpenXmlExStyle> styles)
+        public OpenXmlExStyles(IEnumerable<BaseOpenXmlExStyle> styles)
         {
             GenerateStyles(styles);
             _Styles = GetStylesheet();
@@ -76,7 +76,7 @@ namespace OpenXmlEx.Styles
 
         /// <summary> Генератор стилей </summary>
         /// <param name="styles">стили заданные пользователем</param>
-        private void GenerateStyles(IEnumerable<OpenXmlExStyle> styles)
+        private void GenerateStyles(IEnumerable<BaseOpenXmlExStyle> styles)
         {
             foreach (var style in styles)
             {
@@ -127,37 +127,15 @@ namespace OpenXmlEx.Styles
         }
 
 
-
-        private Stylesheet GetStylesheet()
-        {
-            //var styles = new Stylesheet();
-            //var fonts = new Fonts();
-            //foreach (var font in Fonts.Values.Select(f => f.Font))
-            //    fonts.Append(font);
-
-            //var fills = new Fills();
-            //foreach (var fill in Fills.Values.Select(f => f.Fill))
-            //    fills.Append(fill);
-
-            //var borders = new Borders();
-            //foreach (var border in Borders.Values.Select(b => b.Border))
-            //    borders.Append(border);
-
-
-            //var cells = new CellFormats();
-            //foreach (var cell in CellsStyles.Values.Select(c => c.CellStyle))
-            //    cells.Append(cell);
-
-            //styles.Append(fonts);
-            //styles.Append(fills);
-            //styles.Append(borders);
-            //styles.Append(cells);
-            //return styles;
-            return new(
+        /// <summary>
+        /// создание стилей формата OpenXML
+        /// </summary>
+        /// <returns></returns>
+        private Stylesheet GetStylesheet() =>
+            new(
                 new Fonts(Fonts.Values.Select(f => f.Font)),
                 new Fills(Fills.Values.Select(f => f.Fill)),
                 new Borders(Borders.Values.Select(b => b.Border)),
                 new CellFormats(CellsStyles.Values.Select(c => c.CellStyle)));
-        }
     }
 }
