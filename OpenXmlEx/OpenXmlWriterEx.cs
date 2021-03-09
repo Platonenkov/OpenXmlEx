@@ -14,7 +14,7 @@ using OpenXmlEx.Styles.Base;
 
 namespace OpenXmlEx
 {
-    public class OpenXmlEx : OpenXmlPartWriter
+    public class OpenXmlWriterEx : OpenXmlPartWriter
     {
         public static OpenXmlExStyles GetStyles(IEnumerable<OpenXmlExStyle> styles) => new(styles);
 
@@ -25,23 +25,23 @@ namespace OpenXmlEx
         #region приоритет 1
 
         /// <inheritdoc />
-        public OpenXmlEx(
+        public OpenXmlWriterEx(
             OpenXmlPart OpenXmlPart,
             OpenXmlExStyles styles)
             : base(OpenXmlPart) => InitStyles(styles);
 
         /// <inheritdoc />
-        public OpenXmlEx(OpenXmlPart OpenXmlPart, Encoding encoding,
+        public OpenXmlWriterEx(OpenXmlPart OpenXmlPart, Encoding encoding,
             OpenXmlExStyles styles)
             : base(OpenXmlPart, encoding) => InitStyles(styles);
 
         /// <inheritdoc />
-        public OpenXmlEx(Stream PartStream,
+        public OpenXmlWriterEx(Stream PartStream,
             OpenXmlExStyles styles)
             : base(PartStream) => InitStyles(styles);
 
         /// <inheritdoc />
-        public OpenXmlEx(Stream PartStream, Encoding encoding,
+        public OpenXmlWriterEx(Stream PartStream, Encoding encoding,
             OpenXmlExStyles styles)
             : base(PartStream, encoding) => InitStyles(styles);
 
@@ -53,23 +53,23 @@ namespace OpenXmlEx
         #region приоритет 2
 
         /// <inheritdoc />
-        public OpenXmlEx(
+        public OpenXmlWriterEx(
             OpenXmlPart OpenXmlPart,
             IEnumerable<OpenXmlExStyle> styles)
             : base(OpenXmlPart) => InitStyles(styles);
 
         /// <inheritdoc />
-        public OpenXmlEx(OpenXmlPart OpenXmlPart, Encoding encoding,
+        public OpenXmlWriterEx(OpenXmlPart OpenXmlPart, Encoding encoding,
             IEnumerable<OpenXmlExStyle> styles)
             : base(OpenXmlPart, encoding) => InitStyles(styles);
 
         /// <inheritdoc />
-        public OpenXmlEx(Stream PartStream,
+        public OpenXmlWriterEx(Stream PartStream,
             IEnumerable<OpenXmlExStyle> styles)
             : base(PartStream) => InitStyles(styles);
 
         /// <inheritdoc />
-        public OpenXmlEx(Stream PartStream, Encoding encoding,
+        public OpenXmlWriterEx(Stream PartStream, Encoding encoding,
             IEnumerable<OpenXmlExStyle> styles)
             : base(PartStream, encoding) => InitStyles(styles);
 

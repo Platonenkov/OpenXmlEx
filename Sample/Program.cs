@@ -38,7 +38,7 @@ namespace Sample
 
             #region Styles
 
-            var styles = OpenXmlEx.OpenXmlEx.GetStyles(
+            var styles = OpenXmlWriterEx.GetStyles(
                 new List<OpenXmlExStyle>()
                 {
                     new OpenXmlExStyle() {FontColor = System.Drawing.Color.Crimson, IsBoldFont = true},
@@ -70,7 +70,7 @@ namespace Sample
             sheets.Append(sheet_1);
             #endregion
 
-            using var writer = new OpenXmlEx.OpenXmlEx(ws_part, styles);
+            using var writer = new OpenXmlWriterEx(ws_part, styles);
 
             writer.WriteStartElement(new Worksheet());
 
@@ -119,10 +119,10 @@ namespace Sample
 
             var c = new Cell
             {
-                CellReference = StringValue.FromString($"{OpenXmlEx.OpenXmlEx.GetColumnName(850)}{82}"),
+                CellReference = StringValue.FromString($"{OpenXmlEx.OpenXmlWriterEx.GetColumnName(850)}{82}"),
                 CellValue = new CellValue("text"),
             };
-            var t = OpenXmlEx.OpenXmlEx.GetCellAddress(c);
+            var t = OpenXmlEx.OpenXmlWriterEx.GetCellAddress(c);
 
             #endregion
 
