@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace OpenXmlEx.Errors
+namespace OpenXmlEx.Errors.Cells
 {
-    public class CellException : Exception
+    internal class CellException : Exception
     {
         /// <summary> Номер строки вызвавшей ошибку </summary>
         public uint RowNumder { get; set; }
@@ -13,13 +13,18 @@ namespace OpenXmlEx.Errors
 
         /// <summary> Адрес ячейки в excel </summary>
         public string ExcelAddress => $"{_columnName}{RowNumder}";
+        /// <summary>
+        /// имя метода где произошла ошибка
+        /// </summary>
+        public string MethodName { get; }
 
-        public CellException(string message, uint rowNumder, uint cellNumber, string excelAddress)
+        public CellException(string message, uint rowNumder, uint cellNumber, string excelAddress,string method_name)
             : base(message)
         {
             RowNumder = rowNumder;
             CellNumder = cellNumber;
             _columnName = excelAddress;
+            MethodName = method_name;
         }
 
         #region Overrides of Exception

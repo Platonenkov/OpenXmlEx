@@ -9,7 +9,7 @@ namespace OpenXmlEx.SubClasses
     /// <summary>
     /// Класс для указания ширины ячеек таблицы
     /// </summary>
-    public class WidthOpenXmlEx
+    public sealed record WidthOpenXmlEx
     {
         /// <summary> первая ячейка диапазона </summary>
         public uint First { get; set; }
@@ -18,7 +18,7 @@ namespace OpenXmlEx.SubClasses
         /// <summary> Ширина ячейки </summary>
         public double Width { get; set; }
 
-        public WidthOpenXmlEx(uint first,uint last,double width)
+        public WidthOpenXmlEx(uint first, uint last, double width)
         {
             First = first;
             Last = last;
@@ -30,10 +30,6 @@ namespace OpenXmlEx.SubClasses
 
         }
 
-        public WidthOpenXmlEx()
-        {
-            
-        }
-
+        public void Deconstruct(out uint first, out uint last, out double widt) => (first, last, widt) = (First, Last, Width);
     }
 }

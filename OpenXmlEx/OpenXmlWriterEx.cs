@@ -7,6 +7,9 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using OpenXmlEx.Errors;
+using OpenXmlEx.Errors.Cells;
+using OpenXmlEx.Errors.Rows;
+using OpenXmlEx.Extensions;
 using Column = DocumentFormat.OpenXml.Spreadsheet.Column;
 using Columns = DocumentFormat.OpenXml.Spreadsheet.Columns;
 using OpenXmlEx.Styles;
@@ -92,15 +95,15 @@ namespace OpenXmlEx
             switch (elementObject)
             {
                 case Row row:
-                    _Rows.Add(row.RowIndex, false);
+                    _Rows.Add(row.RowIndex, closed);
                     break;
 
                 case Cell cell:
                     {
-                        var address = GetCellAddress(cell);
+                        var address = OpenXmlExHelper.GetCellAddress(cell);
                         if (address.Equals(default))
                             return;
-                        _Cells.Add((address.rowNum, address.collNum), false);
+                        _Cells.Add((address.rowNum, address.collNum), closed);
                         break;
                     }
             }
@@ -126,13 +129,13 @@ namespace OpenXmlEx
         public override void Close()
         {
             var (cell_key, cell_value) = _Cells.LastOrDefault();
-            if (cell_key!=default && !cell_value)
+            if (cell_key != default && !cell_value)
             {
                 _Cells[cell_key] = true;
                 WriteEndElement();
             }
             var (row_key, row_value) = _Rows.LastOrDefault();
-            if (row_key!=default && !row_value)
+            if (row_key != default && !row_value)
             {
                 CloseRow(row_key);
             }
@@ -202,29 +205,31 @@ namespace OpenXmlEx
             //Проверка на перезапись данных
             if (_Cells.TryGetValue(key, out var _) && !CanReWrite)
             {
-                throw new CellException("Re-writing data to a cell", RowNum, CellNum, GetColumnName(CellNum));
+                throw new CellException("Re-writing data to a cell", RowNum, CellNum, OpenXmlExHelper.GetColumnName(CellNum), nameof(AddCell));
             }
             // проверка на то что пишем в правильную строку
             if (_Rows.TryGetValue(RowNum, out var row_is_closed))
             {
                 //Если строка закрыта
                 if (row_is_closed)
-                    throw new CellException("Row was closed, but you try write to cell", RowNum, CellNum, GetColumnName(CellNum));
+                    throw new CellException("Row was closed, but you try write to cell", RowNum, CellNum, OpenXmlExHelper.GetColumnName(CellNum), nameof(AddCell));
 
                 //Если запись в ячейку выше (левее) текущей
                 var last_cell = _Cells.Keys.Where(k => k.row == RowNum).Select(s => s.cell).LastOrDefault(c => c > CellNum);
                 if (last_cell != default)
-                    throw new CellException($"Record in cell number {CellNum}, that above last recorded cell with number {last_cell} - not available", RowNum, CellNum, GetColumnName(CellNum));
+                    throw new CellException(
+                        $"Record in cell number {CellNum}, that above last recorded cell with number {last_cell} - not available", RowNum, CellNum,
+                        OpenXmlExHelper.GetColumnName(CellNum), nameof(AddCell));
             }
             else
-                throw new CellException("Row not added to document, before writing to cell", RowNum, CellNum, GetColumnName(CellNum));
+                throw new CellException("Row not added to document, before writing to cell", RowNum, CellNum, OpenXmlExHelper.GetColumnName(CellNum), nameof(AddCell));
 
             #endregion
 
             WriteElement(
                 new Cell
                 {
-                    CellReference = StringValue.FromString($"{GetColumnName(CellNum)}{RowNum}"),
+                    CellReference = StringValue.FromString($"{OpenXmlExHelper.GetColumnName(CellNum)}{RowNum}"),
                     CellValue = new CellValue(text),
                     DataType = Type,
                     StyleIndex = StyleIndex
@@ -282,18 +287,18 @@ namespace OpenXmlEx
                         break;
                     }
                 case false when _Rows.Count > 0 && !_Rows.Last().Value:
-                    throw new RowNotClosedException("You must close the previous line before writing a new one", RowIndex);
+                    throw new RowNotClosedException("You must close the previous line before writing a new one", RowIndex, nameof(AddRow));
             }
 
             var previous = _Rows.Keys.LastOrDefault();
             if (previous > 0 && RowIndex - 1 != previous && !AddSkipedRows)
-                throw new RowException($"Rows must go in order, Last used row was {previous}", RowIndex);
+                throw new RowException($"Rows must go in order, Last used row was {previous}", RowIndex, nameof(AddRow));
             if (AddSkipedRows)
             {
                 for (var r = previous + 1; r < RowIndex; r++)
                     WriteElement(new Row { RowIndex = r });
             }
-            WriteStartElement(new Row { RowIndex = RowIndex }, GetCollapsedAttributes(CollapsedLvl));
+            WriteStartElement(new Row { RowIndex = RowIndex }, OpenXmlExHelper.GetCollapsedAttributes(CollapsedLvl));
         }
 
         /// <summary> Закрыть строку </summary>
@@ -303,10 +308,10 @@ namespace OpenXmlEx
             if (_Rows.TryGetValue(RowIndex, out var row_is_closed))
             {
                 if (row_is_closed)
-                    throw new RowNotOpenException("Row was closed, but you agane try close", RowIndex);
+                    throw new RowNotOpenException($"Row was closed, but you agane try close, Row - {RowIndex}", RowIndex, nameof(CloseRow));
             }
             else
-                throw new RowException("Row not added to document, but you try close it", RowIndex);
+                throw new RowException("Row not added to document, but you try close it", RowIndex, nameof(CloseRow));
 
             //if (_Rows.Last().Key is { } row_key && row_key != RowIndex)
             //    throw new RowException(
@@ -329,7 +334,7 @@ namespace OpenXmlEx
         /// <param name="LastRow">последняя строка</param>
         public void SetFilter(string ListName, uint FirstColumn, uint LastColumn, uint FirstRow, uint? LastRow = null)
         {
-            WriteElement(new AutoFilter { Reference = $"{GetColumnName(FirstColumn)}{FirstRow}:{GetColumnName(LastColumn)}{LastRow ?? FirstRow}" });
+            WriteElement(new AutoFilter { Reference = $"{OpenXmlExHelper.GetColumnName(FirstColumn)}{FirstRow}:{OpenXmlExHelper.GetColumnName(LastColumn)}{LastRow ?? FirstRow}" });
             // не забыть в конце листа утвердить в конце листа
             ApprovalFilter(ListName, FirstColumn, LastColumn, FirstRow, LastRow ?? FirstRow);
         }
@@ -350,7 +355,7 @@ namespace OpenXmlEx
                     Name = "_xlnm._FilterDatabase",
                     LocalSheetId = 0U,
                     Hidden = true,
-                    Text = $"{ListName}!${GetColumnName(FirstColumn)}${FirstRow}:${GetColumnName(LastColumn)}${LastRow}"
+                    Text = $"{ListName}!${OpenXmlExHelper.GetColumnName(FirstColumn)}${FirstRow}:${OpenXmlExHelper.GetColumnName(LastColumn)}${LastRow}"
                 });
             WriteEndElement(); //Filter
         }
@@ -361,86 +366,28 @@ namespace OpenXmlEx
         /// после блока фильтров но до закрытия блока WorkSheet
         /// </summary>
         /// <param name="MergedCells">перечень объединенных ячеек</param>
-        public void SetMergedList(IEnumerable<MergeCell> MergedCells)
+        public void SetMergedList()
         {
             WriteStartElement(new MergeCells());
-            foreach (var mer in MergedCells) WriteElement(mer);
+            foreach (var mer in _MergedCells) WriteElement(mer.Value);
             WriteEndElement();
         }
 
 
         #endregion
 
-        #region Helper
-        /// <summary> Словарь имен колонок excel </summary>
-        private static readonly Dictionary<uint, string> _Columns = new(676);
-
-        /// <summary> Возвращает строковое имя колонки по номеру (1 - А, 2 - В) </summary>
-        /// <param name="index">номер колонки</param>
-        /// <returns></returns>
-        public static string GetColumnName(int index) => GetColumnName((uint)index);
-
-        /// <summary> Возвращает строковое имя колонки по номеру (1 - А, 2 - В) </summary>
-        /// <param name="index">номер колонки</param>
-        /// <returns></returns>
-        public static string GetColumnName(uint index) => GetColumnInfo(index).Value;
-        /// <summary> Возвращает строковое имя колонки по номеру (1 - А, 2 - В) </summary>
-        /// <param name="index">номер колонки</param>
-        /// <returns></returns>
-        public static KeyValuePair<uint, string> GetColumnInfo(uint index)
-        {
-            lock (_Columns)
-            {
-                var int_col = index - 1; //-1 так как в словаре индексы с 0, а в excel с 1
-                if (_Columns.ContainsKey(int_col)) return _Columns.FirstOrDefault(c => c.Key == int_col);
-                var int_first_letter = ((int_col) / 676) + 64;
-                var int_second_letter = ((int_col % 676) / 26) + 64;
-                var int_third_letter = (int_col % 26) + 65;
-                var FirstLetter = (int_first_letter > 64) ? (char)int_first_letter : ' ';
-                var SecondLetter = (int_second_letter > 64) ? (char)int_second_letter : ' ';
-                var ThirdLetter = (char)int_third_letter;
-                var s = string.Concat(FirstLetter, SecondLetter, ThirdLetter).Trim();
-                var col = new KeyValuePair<uint, string>(int_col, s);
-                _Columns.Add(col.Key, col.Value);
-                return col;
-            }
-        }
-
-        public static (uint rowNum, uint collNum) GetCellAddress(Cell cell)
-        {
-
-            var cell_ref = cell.CellReference;
-            var column_name = string.Empty;
-            foreach (var simbol in cell_ref.Value)
-            {
-                if (!uint.TryParse(simbol.ToString(), out var r))
-                {
-                    column_name += simbol;
-                }
-                else
-                    break;
-            }
-            var can_get_num = uint.TryParse(cell_ref.Value.Split(column_name).LastOrDefault(), out var row_number);
-            if (!can_get_num)
-                return default;
-            lock (_Columns)
-            {
-                var col_number = _Columns.FirstOrDefault(c => c.Value == column_name).Key + 1; //+1 так как в словаре индексы с 0, а в excel с 1
-                return (row_number, col_number);
-            }
-        }
         #region MergedCell
 
-        /// <summary>
-        /// Формирует объединенную ячейку для документа
-        /// </summary>
-        /// <param name="StartCell">колонка начала диапазона</param>
-        /// <param name="StartRow">строка начала диапазона</param>
-        /// <param name="EndCell">колонка конца диапазона</param>
-        /// <param name="EndRow">строка конца диапазона (если не указано то также что и начало)</param>
-        /// <returns></returns>
-        public static MergeCell MergeCells(int StartCell, int StartRow, int EndCell, int? EndRow = null)
-            => new() { Reference = new StringValue($"{GetColumnName(StartCell)}{StartRow}:{GetColumnName(EndCell)}{EndRow ?? StartRow}") };
+        private Dictionary<OpenXmlMergedCellEx, MergeCell> _MergedCells { get; } = new();
+        private void MergeCells(OpenXmlMergedCellEx merged)
+        {
+            if (_MergedCells.Keys.Any(
+                k => k.Equals(merged) || merged.StartRow > k.StartRow && merged.EndRow < k.EndRow || merged.EndRow > k.StartRow && merged.EndRow < k.EndRow))
+            {
+
+            }
+            _MergedCells.Add(merged, new() { Reference = new StringValue($"{OpenXmlExHelper.GetColumnName(merged.StartCell)}{merged.StartRow}:{OpenXmlExHelper.GetColumnName(merged.EndCell)}{merged.EndRow}") });
+        }
 
         /// <summary>
         /// Формирует объединенную ячейку для документа
@@ -450,8 +397,8 @@ namespace OpenXmlEx
         /// <param name="EndCell">колонка конца диапазона</param>
         /// <param name="EndRow">строка конца диапазона (если не указано то также что и начало)</param>
         /// <returns></returns>
-        public static MergeCell MergeCells(int StartCell, uint StartRow, int EndCell, uint? EndRow = null)
-            => new() { Reference = new StringValue($"{GetColumnName(StartCell)}{StartRow}:{GetColumnName(EndCell)}{EndRow ?? StartRow}") };
+        public void MergeCells(int StartCell, int StartRow, int EndCell, int? EndRow = null)
+            => MergeCells(new OpenXmlMergedCellEx((uint)StartCell, (uint)StartRow, (uint)EndCell, EndRow is null ? (uint)StartRow : (uint)EndRow));
 
         /// <summary>
         /// Формирует объединенную ячейку для документа
@@ -461,8 +408,19 @@ namespace OpenXmlEx
         /// <param name="EndCell">колонка конца диапазона</param>
         /// <param name="EndRow">строка конца диапазона (если не указано то также что и начало)</param>
         /// <returns></returns>
-        public MergeCell MergeCells(uint StartCell, uint StartRow, uint EndCell, uint? EndRow = null)
-            => new() { Reference = new StringValue($"{GetColumnName(StartCell)}{StartRow}:{GetColumnName(EndCell)}{EndRow ?? StartRow}") };
+        public void MergeCells(int StartCell, uint StartRow, int EndCell, uint? EndRow = null)
+            => MergeCells(new OpenXmlMergedCellEx((uint)StartCell, StartRow, (uint)EndCell, EndRow ?? StartRow));
+
+        /// <summary>
+        /// Формирует объединенную ячейку для документа
+        /// </summary>
+        /// <param name="StartCell">колонка начала диапазона</param>
+        /// <param name="StartRow">строка начала диапазона</param>
+        /// <param name="EndCell">колонка конца диапазона</param>
+        /// <param name="EndRow">строка конца диапазона (если не указано то также что и начало)</param>
+        /// <returns></returns>
+        public void MergeCells(uint StartCell, uint StartRow, uint EndCell, uint? EndRow = null)
+            => MergeCells(new OpenXmlMergedCellEx(StartCell, StartRow, EndCell, EndRow ?? StartRow));
 
         /// <summary>
         /// Формирует объединенную ячейку для документа
@@ -472,24 +430,12 @@ namespace OpenXmlEx
         /// <param name="EndCell">колонка конца диапазона</param>
         /// <param name="EndRow">строка конца диапазона (если не указано то к что и начало)</param>
         /// <returns></returns>
-        public MergeCell MergeCells(uint StartCell, int StartRow, uint EndCell, int? EndRow = null)
-            => new() { Reference = new StringValue($"{GetColumnName(StartCell)}{StartRow}:{GetColumnName(EndCell)}{EndRow ?? StartRow}") };
-
-        #endregion
-
-        /// <summary> Создаёт запись о группировке для writer </summary>
-        /// <param name="lvl">уровень группы</param>
-        /// <returns></returns>
-        public static OpenXmlAttribute[] GetCollapsedAttributes(uint lvl = 0) => lvl == 0
-            ? Array.Empty<OpenXmlAttribute>()
-            : new[] { new OpenXmlAttribute("outlineLevel", string.Empty, $"{lvl}"), new OpenXmlAttribute("hidden", string.Empty, $"{lvl}") };
-
+        public void MergeCells(uint StartCell, int StartRow, uint EndCell, int? EndRow = null)
+            => MergeCells(new OpenXmlMergedCellEx(StartCell, (uint)StartRow, EndCell, EndRow is null ? (uint)StartRow : (uint)EndRow));
 
         #endregion
 
         #region Style Comparer
-
-
 
         /// <summary>
         /// Получить номер стиля похожего на искомый

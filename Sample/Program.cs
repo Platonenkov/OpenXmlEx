@@ -10,6 +10,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.Win32.SafeHandles;
 using OpenXmlEx;
+using OpenXmlEx.Extensions;
 using OpenXmlEx.Styles;
 using OpenXmlEx.Styles.Base;
 using OpenXmlEx.SubClasses;
@@ -99,8 +100,6 @@ namespace Sample
 
             writer.WriteStartElement(new SheetData());
 
-            var mer_list = new List<MergeCell>();
-
             #region 1 лист
 
 
@@ -119,25 +118,25 @@ namespace Sample
 
             var c = new Cell
             {
-                CellReference = StringValue.FromString($"{OpenXmlEx.OpenXmlWriterEx.GetColumnName(850)}{82}"),
+                CellReference = StringValue.FromString($"{OpenXmlExHelper.GetColumnName(850)}{82}"),
                 CellValue = new CellValue("text"),
             };
-            var t = OpenXmlEx.OpenXmlWriterEx.GetCellAddress(c);
+            var t = OpenXmlExHelper.GetCellAddress(c);
 
             #endregion
 
-            writer.AddRow(1);
+            writer.AddRow(3,0,false,true);
 
-            writer.AddCell("Test", 1, 1, 0);
-            writer.CloseRow(1);
+            writer.AddCell("Test", 1, 3, 0);
+            writer.AddCell("Test", 7, 3, 0);
+            writer.CloseRow(3);
             writer.AddRow(4, 0, false, true);
             writer.AddCell("Test", 4, 4, 1);
             writer.AddCell("Test", 5, 4, 2);
             writer.AddCell("Test", 6, 4, 3);
 
-            mer_list.Add(writer.MergeCells(6, 3, 10, 5));
             writer.AddCell("Test", 7, 4, 3);
-
+            writer.MergeCells(6, 3, 10, 5);
             writer.CloseRow(4);
             writer.WriteEndElement(); //end of SheetData
 
@@ -147,8 +146,7 @@ namespace Sample
             writer.SetFilter(sheet_name, 1, 20, 3, 30);
 
             //Секция с объединенными ячейками должна быть в конце перед закрытием секции WorkSheet
-            if (mer_list.Count > 0)
-                writer.SetMergedList(mer_list);
+            writer.SetMergedList();
 
             #endregion
 

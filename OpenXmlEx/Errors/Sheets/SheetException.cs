@@ -4,17 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenXmlEx.Errors.Actions
+namespace OpenXmlEx.Errors.Sheets
 {
-    internal class GroupingException : Exception
+    internal class SheetException : Exception
     {
         public string SheetName { get; }
         public string MethodName { get; }
-
-        public GroupingException(string message,string sheet_name,string method_name) : base(message)
+        public SheetException(string message, string sheet_name, string method_name) : base(message)
         {
-            SheetName = sheet_name;
             MethodName = method_name;
+            SheetName = sheet_name;
         }
     }
 }
