@@ -1,9 +1,9 @@
-### OpenXmlEx
+## OpenXmlEx
 
-#### EN
+### EN
 Package wrapper OpenXML to facilitate the recording of heavy documents without allocating a large amount of memory
 
-##### Create styles for the document
+#### Create styles for the document
 ```C#
     var styles = new OpenXmlExStyles(
         new List<BaseOpenXmlExStyle>()
@@ -28,23 +28,23 @@ after you can select style by number from writer
 ```
 Where key is style number;
 
-##### Create new EasyWriter
+#### Create new EasyWriter
 ```C#
     using var writer = new EasyWriter(FileName, styles);
 ```
-##### Add Sheet
+#### Add Sheet
 ```C#
     var sheet_name_1 = "Test_sheet_name";
     writer.AddNewSheet(sheet_name_1);
 
 ```
-##### Specify how rows are grouped
+#### Specify how rows are grouped
 
 (set 1 times per sheet)
 ```C#
     writer.SetGrouping(false, false); // SetGrouping(bool SummaryBelow = false, bool SummaryRight = false)
 ```
-##### Set Width for column
+#### Set Width for column
 
 (set 1 times per sheet)
 ```C#
@@ -61,7 +61,7 @@ Where key is style number;
     writer.SetWidth(width_setting); //SetWidth(IEnumerable<WidthOpenXmlEx> settings)
 
 ```
-##### Add Rows 
+#### Add Rows 
 ```C#
     writer.AddRow(3, 0, true, true);
     //AddRow(uint RowIndex, uint CollapsedLvl = 0, bool ClosePreviousIfOpen = false, bool AddSkipedRows = false)
@@ -75,30 +75,30 @@ Use CloseRow if you want total control;
 Use AddSkipedRows,or add empty lines manually if you need.
 XML does not allow line omissions, for example, a record must go strictly from 1, and after it - the second and so on;
 
-##### AddCell
+#### AddCell
 ```C#
     writer.AddCell("Test", 1, 3, 0);
     //AddCell(string text, uint CellNum, uint RowNum, uint StyleIndex = 0, CellValues Type = CellValues.String, bool CanReWrite = false)
 ```
 StyleIndex - style number from styles, but don't forgot that you styles will go after 2 base excel styles; // Use FindStyleOrDefault if you forgot number
 CanReWrite - re-writing to a cell will cause an error without this token;
-##### - SetMergedCell
+#### - SetMergedCell
 Set Merged cells range when you need after start new sheet and befor start a new one;
 ```C#
     writer.MergeCells(6, 3, 10, 5); //MergeCells(int StartCell, int StartRow, int EndCell, int EndRow)
 ```
-#####  SetFilter
+####  SetFilter
 Set table filter when you need after start new sheet and befor start a new one, but only one filter to sheet!
 ```C#
     writer.SetFilter(1, 5, 3, 5); //SetFilter(string ListName, uint FirstColumn, uint LastColumn, uint FirstRow, uint LastRow)
 ```
-##### Close or add a new sheet and repeat all steps
+#### Close or add a new sheet and repeat all steps
 the document will add all closing tags when you close the writer, call dispose, or start a new sheet;
 
-#### RU
+### RU
 Оболочка для OpenXML, приванная облегчить запись тяжёлых документов без выделения большого количества памяти
 
-##### Создайте стили для документа
+#### Создайте стили для документа
 ```C#
     var styles = new OpenXmlExStyles(
         new List<BaseOpenXmlExStyle>()
@@ -123,23 +123,23 @@ the document will add all closing tags when you close the writer, call dispose, 
 ```
 Где key - номер стиля
 
-##### Создайте новый EasyWriter
+#### Создайте новый EasyWriter
 ```C#
     using var writer = new EasyWriter(FileName, styles);
 ```
-##### Добавьте новый лист
+#### Добавьте новый лист
 ```C#
     var sheet_name_1 = "Test_sheet_name";
     writer.AddNewSheet(sheet_name_1);
 ```
-##### Укажите способ группировки строк (если необходимо)
+#### Укажите способ группировки строк (если необходимо)
 
 
 (устанавливается 1 раз на лист)
 ```C#
     writer.SetGrouping(false, false); // SetGrouping(bool SummaryBelow = false, bool SummaryRight = false)
 ```
-##### Укажите размеры колонок 
+#### Укажите размеры колонок 
 
 (устанавливается 1 раз на лист)
 ```C#
@@ -156,7 +156,7 @@ the document will add all closing tags when you close the writer, call dispose, 
     writer.SetWidth(width_setting); //SetWidth(IEnumerable<WidthOpenXmlEx> settings)
 
 ```
-##### добавьте строку
+#### добавьте строку
 ```C#
     writer.AddRow(3, 0, true, true);
     //AddRow(uint RowIndex, uint CollapsedLvl = 0, bool ClosePreviousIfOpen = false, bool AddSkipedRows = false)
@@ -172,7 +172,7 @@ CollapsedLvl - устанавливает уровень группировки 
 используйте AddSkipedRows, или вручную добавляйте пропущенные строки.
 XML не поддерживает пропуска строк, данные должны начинаться с 1 строки, после нее должна идти вторая и так далее.
 
-##### добавьте ячейку
+#### добавьте ячейку
 ```C#
     writer.AddCell("Test", 1, 3, 0);
     //AddCell(string text, uint CellNum, uint RowNum, uint StyleIndex = 0, CellValues Type = CellValues.String, bool CanReWrite = false)
@@ -182,19 +182,19 @@ StyleIndex - номер стиля из таблицы которую созда
 
 CanReWrite - перезапись данных в ячейке может вызвать сбой в документе, используйте этот параметр чтобы отключить вызов ошибки;
 
-##### - Установите объединенные диапазоны ячеек
+#### - Установите объединенные диапазоны ячеек
 
 Установить диапазон как объединённый можно в любом месте после зодания листа и до закрытия или создания нового
 ```C#
     writer.MergeCells(6, 3, 10, 5); //MergeCells(int StartCell, int StartRow, int EndCell, int EndRow)
 ```
-#####  установите фильтр
+####  установите фильтр
 
 Установите фильтр таблицы если он необходим, вызвать функцию можно в любом месте после содания листа и до закрытия или создания нового, но только 1 раз на лист!
 
 ```C#
     writer.SetFilter(1, 5, 3, 5); //SetFilter(string ListName, uint FirstColumn, uint LastColumn, uint FirstRow, uint LastRow)
 ```
-##### Закройте Writer или добавьте новый лист и повторите шаги
+#### Закройте Writer или добавьте новый лист и повторите шаги
 Writer добавит все необходимые закрывающие теги когда будет вызван Close, Dispose, или начат новый лист документа.
 
