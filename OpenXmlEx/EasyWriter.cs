@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using OpenXmlEx.Errors;
+using OpenXmlEx.Errors.Actions;
 using OpenXmlEx.Errors.Sheets;
 using OpenXmlEx.Styles;
 using OpenXmlEx.Styles.Base;
@@ -20,6 +22,7 @@ namespace OpenXmlEx
         /// </summary>
         private readonly string _FilePath;
 
+        private readonly Encoding _Encoding;
         #region Документ
 
         /// <summary> стили для документа </summary>
@@ -41,24 +44,29 @@ namespace OpenXmlEx
         private Dictionary<(uint id, Sheet sheet), bool> _SheetDic { get; } = new();
 
         #region Конструкторы
-
-        public EasyWriter(string FilePath)
-        {
-            _FilePath = FilePath;
-            _Styles = new OpenXmlExStyles();
-            InitializeDocumentBaseBody(FilePath);
-        }
-        public EasyWriter(string FilePath, OpenXmlExStyles styles)
+        public EasyWriter(string FilePath, Encoding encoding, OpenXmlExStyles styles)
         {
             _FilePath = FilePath;
             _Styles = styles;
+            _Encoding = encoding;
             InitializeDocumentBaseBody(FilePath);
         }
-        public EasyWriter(string FilePath, IEnumerable<BaseOpenXmlExStyle> styles)
+
+        public EasyWriter(string FilePath, OpenXmlExStyles styles):this(FilePath,Encoding.UTF8,styles)
         {
-            _Styles = new OpenXmlExStyles(styles);
-            _FilePath = FilePath;
-            InitializeDocumentBaseBody(FilePath);
+
+        }
+        public EasyWriter(string FilePath):this(FilePath, Encoding.UTF8, new OpenXmlExStyles())
+        {
+        }
+
+        public EasyWriter(string FilePath, Encoding encoding, IEnumerable<BaseOpenXmlExStyle> styles) : this(FilePath, encoding, new OpenXmlExStyles(styles))
+        {
+
+        } 
+        public EasyWriter(string FilePath, IEnumerable<BaseOpenXmlExStyle> styles) : this(FilePath, Encoding.UTF8, new OpenXmlExStyles(styles))
+        {
+
         }
 
         #endregion
@@ -97,12 +105,13 @@ namespace OpenXmlEx
 
             // ReSharper disable once PossiblyMistakenUseOfParamsMethod
             _Sheets.Append(sheet);
-            CreateWriter(ws_part);
+            CreateWriter(ws_part, sheet_name);
         }
 
         /// <summary> Создаёт новое перо для записи в документ </summary>
         /// <param name="wsPart">Часть документа для записи</param>
-        private void CreateWriter(WorksheetPart wsPart)
+        /// <param name="SheetName">имя листа</param>
+        private void CreateWriter(WorksheetPart wsPart, string SheetName)
         {
             #region Закрываем текущее перо
             //_Writer?.CloseSheet();
@@ -112,7 +121,7 @@ namespace OpenXmlEx
 
             #endregion
 
-            _Writer = new OpenXmlWriterEx(wsPart, _Styles);
+            _Writer = new OpenXmlWriterEx(wsPart, _Encoding, _Styles, SheetName);
 
             _Writer.WriteStartElement(new Worksheet());
         }
@@ -144,8 +153,8 @@ namespace OpenXmlEx
         /// <param name="LastColumn">последняя колонка</param>
         /// <param name="FirstRow">первая строка</param>
         /// <param name="LastRow">последняя строка</param>
-        public void SetFilter(string ListName, uint FirstColumn, uint LastColumn, uint FirstRow, uint? LastRow = null) =>
-            _Writer.SetFilter(ListName, FirstColumn, LastColumn, FirstRow, LastRow);
+        public void SetFilter(uint FirstColumn, uint LastColumn, uint FirstRow, uint? LastRow = null, string ListName = null) =>
+            _Writer.SetFilter(FirstColumn, LastColumn, FirstRow, LastRow, ListName);
         #endregion
 
         #region Rows
@@ -214,6 +223,14 @@ namespace OpenXmlEx
         #endregion
 
         #region MergeCells
+        /// <summary> Формирует объединенную ячейку для документа </summary>
+        /// <param name="new_range">новый диапазон для объединения</param>
+        public void MergeCells(OpenXmlMergedCellEx new_range)
+        {
+            if (_Writer is null)
+                throw new MergeCellException("Start new sheet before set merge", new_range, null, nameof(MergeCells));
+            _Writer.MergeCells(new_range);
+        }
 
         /// <summary>
         /// Формирует объединенную ячейку для документа
@@ -224,7 +241,7 @@ namespace OpenXmlEx
         /// <param name="EndRow">строка конца диапазона (если не указано то также что и начало)</param>
         /// <returns></returns>
         public void MergeCells(int StartCell, int StartRow, int EndCell, int? EndRow = null) =>
-            _Writer.MergeCells(StartCell, StartRow, EndCell, EndRow);
+            MergeCells(new OpenXmlMergedCellEx((uint)StartCell, (uint)StartRow, (uint)EndCell, EndRow is null ? (uint)StartRow : (uint)EndRow));
 
         /// <summary>
         /// Формирует объединенную ячейку для документа
@@ -235,7 +252,7 @@ namespace OpenXmlEx
         /// <param name="EndRow">строка конца диапазона (если не указано то также что и начало)</param>
         /// <returns></returns>
         public void MergeCells(uint StartCell, uint StartRow, uint EndCell, uint? EndRow = null) =>
-            _Writer.MergeCells(StartCell, StartRow, EndCell, EndRow);
+            MergeCells(new OpenXmlMergedCellEx(StartCell, StartRow, EndCell, EndRow ?? StartRow));
 
         #endregion
 

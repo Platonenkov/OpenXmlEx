@@ -24,6 +24,7 @@ namespace OpenXmlEx
         /// <summary> Стили для документа </summary>
         public readonly OpenXmlExStyles Style;
 
+        private readonly string _SheetName;
         #region Статусы
 
         /// <summary> статус открыта ли новая секция документа </summary>
@@ -60,6 +61,11 @@ namespace OpenXmlEx
         public OpenXmlWriterEx(Stream PartStream, Encoding encoding,
             OpenXmlExStyles styles)
             : base(PartStream, encoding) => Style = styles;
+
+        public OpenXmlWriterEx(WorksheetPart OpenXmlPart, Encoding encoding, OpenXmlExStyles styles, string SheetName) : this(OpenXmlPart, encoding, styles)
+        {
+            _SheetName = SheetName;
+        }
 
         #endregion
 
@@ -339,13 +345,21 @@ namespace OpenXmlEx
         /// <param name="LastColumn">последняя колонка</param>
         /// <param name="FirstRow">первая строка</param>
         /// <param name="LastRow">последняя строка</param>
-        public void SetFilter(string ListName, uint FirstColumn, uint LastColumn, uint FirstRow, uint? LastRow = null)
+        public void SetFilter(uint FirstColumn, uint LastColumn, uint FirstRow, uint? LastRow = null, string ListName = null)
         {
+            if (string.IsNullOrWhiteSpace(ListName))
+            {
+                if (string.IsNullOrWhiteSpace(_SheetName))
+                {
+                    throw new FilterException("Can not set filter without sheet name", nameof(InsertFilter));
+                }
+                ListName = _SheetName; // Если имя было указано при создании Writer
+            }
 
             if (AddFiltertoSheet is not null)
                 throw new SheetException("Secondary set Filter to the sheet", ListName, nameof(SetFilter));
 
-            AddFiltertoSheet = () => InsertFilter(ListName, FirstColumn, LastColumn, FirstRow, LastRow ?? FirstRow);
+            AddFiltertoSheet = () => InsertFilter(FirstColumn, LastColumn, FirstRow, LastRow ?? FirstRow, ListName);
 
         }
         /// <summary> Устанавливает фильтр на колонки (ставить в конце листа перед закрытием)</summary>
@@ -356,8 +370,16 @@ namespace OpenXmlEx
         /// <param name="LastColumn">последняя колонка</param>
         /// <param name="FirstRow">первая строка</param>
         /// <param name="LastRow">последняя строка</param>
-        public void InsertFilter(string ListName, uint FirstColumn, uint LastColumn, uint FirstRow, uint LastRow)
+        public void InsertFilter( uint FirstColumn, uint LastColumn, uint FirstRow, uint LastRow, string ListName)
         {
+            if (string.IsNullOrWhiteSpace(ListName))
+            {
+                if (string.IsNullOrWhiteSpace(_SheetName))
+                {
+                    throw new FilterException("Can not set filter without sheet name", nameof(InsertFilter));
+                }
+                ListName = _SheetName; // Если имя было указано при создании Writer
+            }
             WriteElement(new AutoFilter { Reference = $"{OpenXmlExHelper.GetColumnName(FirstColumn)}{FirstRow}:{OpenXmlExHelper.GetColumnName(LastColumn)}{LastRow}" });
             // не забыть в конце листа утвердить в конце листа
             ApprovalFilter(ListName, FirstColumn, LastColumn, FirstRow, LastRow);
@@ -406,8 +428,9 @@ namespace OpenXmlEx
         #region MergedCell
         /// <summary> Словарь объединённых диапазонов ячеек </summary>
         private Dictionary<OpenXmlMergedCellEx, MergeCell> _MergedCells { get; } = new();
-
-        private void MergeCells(OpenXmlMergedCellEx new_range)
+        /// <summary> Формирует объединенную ячейку для документа </summary>
+        /// <param name="new_range">новый диапазон для объединения</param>
+        public void MergeCells(OpenXmlMergedCellEx new_range)
         {
             var in_range = _MergedCells.Keys.FirstOrDefault(c => CheckInRange(c, new_range));
             if (in_range is not null)

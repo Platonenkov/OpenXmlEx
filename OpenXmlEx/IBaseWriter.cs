@@ -27,7 +27,7 @@ namespace OpenXmlEx
         /// <param name="LastColumn">последняя колонка</param>
         /// <param name="FirstRow">первая строка</param>
         /// <param name="LastRow">последняя строка</param>
-        public void SetFilter(string ListName, uint FirstColumn, uint LastColumn, uint FirstRow, uint? LastRow = null);
+        public void SetFilter(uint FirstColumn, uint LastColumn, uint FirstRow, uint? LastRow = null, string ListName = null);
 
         #endregion
         #region Rows
@@ -63,6 +63,10 @@ namespace OpenXmlEx
         #endregion
 
         #region MergeCells
+
+        /// <summary> Формирует объединенную ячейку для документа </summary>
+        /// <param name="new_range">новый диапазон для объединения</param>
+        public void MergeCells(OpenXmlMergedCellEx new_range);
 
         /// <summary>
         /// Формирует объединенную ячейку для документа

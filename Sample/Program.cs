@@ -74,16 +74,14 @@ namespace Sample
 
             #endregion
 
-
-
             var (key, value) = writer.FindStyleOrDefault(
                 new BaseOpenXmlExStyle()
                 {
                     FontColor = System.Drawing.Color.Crimson,
-                    //FontSize = 20,
-                    //IsBoldFont = true,
-                    //LeftBorderStyle =  BorderStyleValues.Dashed,
-                    //RightBorderStyle = BorderStyleValues.Dashed
+                    FontSize = 20,
+                    IsBoldFont = true,
+                    LeftBorderStyle = BorderStyleValues.Dashed,
+                    RightBorderStyle = BorderStyleValues.Dashed
                 });
 
             #region SheetData
@@ -98,13 +96,13 @@ namespace Sample
             writer.AddCell("Test", 6, 4, 3);
 
             writer.AddCell("Test", 7, 4, 3);
-            writer.MergeCells(6, 3, 10, 5);
 
             #endregion
 
             #region Secondary setting
 
-            writer.SetFilter(sheet_name_1, 1, 5, 3, 5);
+            writer.MergeCells(6, 3, 10, 5);
+            writer.SetFilter(1, 5, 3, 5);
 
 
             #endregion
@@ -147,7 +145,7 @@ namespace Sample
 
             #region Secondary setting
 
-            writer.SetFilter(sheet_name_2, 1, 5, 3, 5);
+            writer.SetFilter(1, 5, 3, 5);
 
 
             #endregion
@@ -253,7 +251,7 @@ namespace Sample
             writer.CloseRow(4);
 
             #region Секция настроек
-            writer.SetFilter(sheet_name, 1, 5, 3, 5);
+            writer.SetFilter(1, 5, 3, 5, sheet_name);
 
 
             #endregion
