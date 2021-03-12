@@ -26,12 +26,137 @@ namespace Sample
             var fonts = new[] { "Times New Roman", "Calibri", "Arial" };
             var fills = new[] { System.Drawing.Color.BlueViolet, System.Drawing.Color.Crimson };
             var sizes = new[] { 8U, 10U, 12U, 14U, 16U };
-            
-            Test(FileName);
-            new Process {StartInfo = new ProcessStartInfo(FileName) {UseShellExecute = true}}.Start();
+
+            EasyWriterTest(FileName);
+            //WriterTest(FileName);
+            new Process { StartInfo = new ProcessStartInfo(FileName) { UseShellExecute = true } }.Start();
         }
 
-        static void Test(string FileName)
+
+
+        static void EasyWriterTest(string FileName)
+        {
+            var styles = new OpenXmlExStyles(
+                new List<BaseOpenXmlExStyle>()
+                {
+                    new BaseOpenXmlExStyle() {FontColor = System.Drawing.Color.Crimson, IsBoldFont = true},
+                    new BaseOpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = System.Drawing.Color.Red}
+                });
+
+            using var writer = new EasyWriter(FileName, styles);
+
+
+
+            #region 1 лист
+            var sheet_name_1 = "Test_sheet_name";
+            writer.AddNewSheet(sheet_name_1);
+
+            #region Надстройка страницы - кнопки группировки сверху
+
+            writer.SetGrouping(false, false);
+
+            #endregion
+
+            #region Установка ширины колонок
+
+            //Установка размеров колонок
+            var width_setting = new List<WidthOpenXmlEx>
+            {
+                new (1, 2, 7),
+                new (3, 3, 11),
+                new (4, 12, 9.5),
+                new (13, 13, 17),
+                new (14, 14, 40),
+                new (15, 16, 15),
+                new (18, 20, 15)
+            };
+            writer.SetWidth(width_setting);
+
+            #endregion
+
+
+
+            var (key, value) = writer.FindStyleOrDefault(
+                new BaseOpenXmlExStyle()
+                {
+                    FontColor = System.Drawing.Color.Crimson,
+                    //FontSize = 20,
+                    //IsBoldFont = true,
+                    //LeftBorderStyle =  BorderStyleValues.Dashed,
+                    //RightBorderStyle = BorderStyleValues.Dashed
+                });
+
+            #region SheetData
+
+            writer.AddRow(3, 0, true, true);
+
+            writer.AddCell("Test", 1, 3, 0);
+            writer.AddCell("Test", 7, 3, 0);
+            writer.AddRow(4, 0, true, true);
+            writer.AddCell("Test", 4, 4, 1);
+            writer.AddCell("Test", 5, 4, 2);
+            writer.AddCell("Test", 6, 4, 3);
+
+            writer.AddCell("Test", 7, 4, 3);
+            writer.MergeCells(6, 3, 10, 5);
+
+            #endregion
+
+            #region Secondary setting
+
+            writer.SetFilter(sheet_name_1, 1, 5, 3, 5);
+
+
+            #endregion
+
+
+            #endregion
+
+            #region 2 лист
+
+            var sheet_name_2 = "Sheet 2.0";
+            writer.AddNewSheet(sheet_name_2);
+
+            #region Надстройка страницы - кнопки группировки сверху
+
+            writer.SetGrouping(false, false);
+
+            #endregion
+
+            #region Установка ширины колонок
+
+            writer.SetWidth(width_setting);
+
+            #endregion
+
+            #region SheetData
+
+            writer.AddRow(3, 0, true, true);
+
+            writer.AddCell("Test 2", 1, 3, 0);
+            writer.AddCell("Test 2", 7, 3, 0);
+            writer.AddRow(4, 0, true, true);
+            writer.AddCell("Test 2", 4, 4, 1);
+            writer.AddCell("Test 2", 5, 4, 2);
+            writer.AddCell("Test 2", 6, 4, 3);
+
+            writer.AddCell("Test 2", 7, 4, 3);
+            writer.MergeCells(6, 3, 10, 5);
+
+            #endregion
+
+            #region Secondary setting
+
+            writer.SetFilter(sheet_name_2, 1, 5, 3, 5);
+
+
+            #endregion
+
+
+            #endregion
+
+        }
+        static void WriterTest(string FileName)
         {
             using var document = SpreadsheetDocument.Create(FileName, SpreadsheetDocumentType.Workbook);
             // create the workbook
@@ -40,7 +165,7 @@ namespace Sample
 
             #region Styles
 
-            var styles = OpenXmlWriterEx.GetStyles(
+            var styles = new OpenXmlExStyles(
                 new List<BaseOpenXmlExStyle>()
                 {
                     new BaseOpenXmlExStyle() {FontColor = System.Drawing.Color.Crimson, IsBoldFont = true},
@@ -86,13 +211,13 @@ namespace Sample
             //Установка размеров колонок
             var width_setting = new List<WidthOpenXmlEx>
             {
-               new (1, 2, 7),
-               new (3, 3, 11),
-               new (4, 12, 9.5),
-               new (13, 13, 17),
-               new (14, 14, 40),
-               new (15, 16, 15),
-               new (18, 20, 15)
+                new (1, 2, 7),
+                new (3, 3, 11),
+                new (4, 12, 9.5),
+                new (13, 13, 17),
+                new (14, 14, 40),
+                new (15, 16, 15),
+                new (18, 20, 15)
             };
             writer.SetWidth(width_setting);
 
@@ -113,19 +238,7 @@ namespace Sample
                     //RightBorderStyle = BorderStyleValues.Dashed
                 });
 
-
-            #region Get cell addres
-
-            var c = new Cell
-            {
-                CellReference = StringValue.FromString($"{OpenXmlExHelper.GetColumnName(850)}{82}"),
-                CellValue = new CellValue("text"),
-            };
-            var t = OpenXmlExHelper.GetCellAddress(c);
-
-            #endregion
-
-            writer.AddRow(3,0,false,true);
+            writer.AddRow(3, 0, false, true);
 
             writer.AddCell("Test", 1, 3, 0);
             writer.AddCell("Test", 7, 3, 0);
@@ -138,22 +251,15 @@ namespace Sample
             writer.AddCell("Test", 7, 4, 3);
             writer.MergeCells(6, 3, 10, 5);
             writer.CloseRow(4);
-            writer.WriteEndElement(); //end of SheetData
 
             #region Секция настроек
+            writer.SetFilter(sheet_name, 1, 5, 3, 5);
 
-            //Секция с фильтром (нужно утвердить на листе)
-            writer.SetFilter(sheet_name, 1, 20, 3, 30);
-
-            //Секция с объединенными ячейками должна быть в конце перед закрытием секции WorkSheet
-            writer.SetMergedList();
 
             #endregion
 
-            writer.WriteEndElement(); //end of worksheet
 
             #endregion
-
         }
     }
 

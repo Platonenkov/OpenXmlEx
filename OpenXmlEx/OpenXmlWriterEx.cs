@@ -4,11 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using OpenXmlEx.Errors;
+using OpenXmlEx.Errors.Actions;
 using OpenXmlEx.Errors.Cells;
 using OpenXmlEx.Errors.Rows;
+using OpenXmlEx.Errors.Sheets;
 using OpenXmlEx.Extensions;
 using Column = DocumentFormat.OpenXml.Spreadsheet.Column;
 using Columns = DocumentFormat.OpenXml.Spreadsheet.Columns;
@@ -18,11 +21,26 @@ using OpenXmlEx.SubClasses;
 
 namespace OpenXmlEx
 {
-    public class OpenXmlWriterEx : OpenXmlPartWriter
+    public class OpenXmlWriterEx : OpenXmlPartWriter, IBaseWriter
     {
         public static OpenXmlExStyles GetStyles(IEnumerable<BaseOpenXmlExStyle> styles) => new(styles);
 
         public OpenXmlExStyles Style { get; private set; }
+
+        #region Статусы
+
+        /// <summary>
+        /// статус открыта ли новая секция документа
+        /// </summary>
+        public bool WorksheetIsOpen { get; private set; }
+        /// <summary>
+        /// статус открыта ли лист для записи
+        /// </summary>
+        public bool SheetIsOpen { get; private set; }
+
+        public bool GroupingWasSet { get; private set; }
+        public bool WidthWasSet { get; private set; }
+        #endregion
 
         #region Конструкторы
 
@@ -95,15 +113,26 @@ namespace OpenXmlEx
             switch (elementObject)
             {
                 case Row row:
-                    _Rows.Add(row.RowIndex, closed);
-                    break;
-
+                    {
+                        _Rows.Add(row.RowIndex, closed);
+                        break;
+                    }
                 case Cell cell:
                     {
                         var address = OpenXmlExHelper.GetCellAddress(cell);
                         if (address.Equals(default))
                             return;
                         _Cells.Add((address.rowNum, address.collNum), closed);
+                        break;
+                    }
+                case Worksheet:
+                    {
+                        WorksheetIsOpen = true;
+                        break;
+                    }
+                case SheetData:
+                    {
+                        SheetIsOpen = true;
                         break;
                     }
             }
@@ -128,20 +157,8 @@ namespace OpenXmlEx
 
         public override void Close()
         {
-            var (cell_key, cell_value) = _Cells.LastOrDefault();
-            if (cell_key != default && !cell_value)
-            {
-                _Cells[cell_key] = true;
-                WriteEndElement();
-            }
-            var (row_key, row_value) = _Rows.LastOrDefault();
-            if (row_key != default && !row_value)
-            {
-                CloseRow(row_key);
-            }
-
+            CloseSheet();
             base.Close();
-
         }
 
         #endregion
@@ -153,11 +170,19 @@ namespace OpenXmlEx
         /// <param name="SummaryRight">группировать справа (false - справа, true - слева)</param>
         public void SetGrouping(bool SummaryBelow = false, bool SummaryRight = false)
         {
+            if (GroupingWasSet)
+                throw new GroupingException("Secondary set grouping to sheet", nameof(SetGrouping));
+
+            if (!WorksheetIsOpen || SheetIsOpen)
+                throw new GroupingException("Wrong location to set grouping, set before opening entry in sheet", nameof(SetGrouping));
+
             #region Надстройка страницы - кнопки группировки сверху
 
             WriteStartElement(new SheetProperties());
             WriteElement(new OutlineProperties { SummaryBelow = SummaryBelow, SummaryRight = SummaryRight });
             WriteEndElement();
+
+            GroupingWasSet = true;
 
             #endregion
         }
@@ -166,17 +191,23 @@ namespace OpenXmlEx
         /// <param name="Settings">список надстроек для листа</param>
         public void SetWidth(IEnumerable<WidthOpenXmlEx> Settings)
         {
+            if (WidthWasSet)
+                throw new SetWidthException("Secondary set of Width for this sheet", nameof(SetWidth));
+            if (!WorksheetIsOpen || SheetIsOpen)
+                throw new SetWidthException(
+                    "Wrong location to set Width settings for the cells, set before opening entry in sheet", nameof(SetWidth));
 
             #region Установка ширины колонок
 
             WriteStartElement(new Columns());
-            foreach (var set in Settings)
-                WriteElement(new Column { Min = set.First, Max = set.Last, Width = set.Width });
+            foreach (var (first, last, widt) in Settings)
+                WriteElement(new Column { Min = first, Max = last, Width = widt });
             WriteEndElement();
-
+            WidthWasSet = true;
             #endregion
-
         }
+
+        #region Cells
 
         /// <summary>
         /// Список записанных ячеек, со статусом (false - open, true - close)
@@ -235,31 +266,8 @@ namespace OpenXmlEx
                     StyleIndex = StyleIndex
                 });
         }
-        /// <summary> Печатает ячейки с одинаковым значением и стилем со столбца по столбец в одной и той же строке</summary>
-        /// <param name="FirstColumn">колонка с которой начали печать</param>
-        /// <param name="LastPrintColumn">последняя напечатанная колонка</param>
-        /// <param name="RowNumber">строка в которой идёт печать</param>
-        /// <param name="StyleIndex">стиль ячейки</param>
-        public void PrintEmptyCells(int FirstColumn, int LastPrintColumn, uint RowNumber, uint StyleIndex = 0) =>
-            PrintCells(FirstColumn, LastPrintColumn, RowNumber, string.Empty, CellValues.String, StyleIndex);
 
-        /// <summary> Печатает ячейки с одинаковым значением и стилем со столбца по столбец в одной и той же строке</summary>
-        /// <param name="FirstColumn">колонка с которой начали печать</param>
-        /// <param name="LastPrintColumn">последняя напечатанная колонка</param>
-        /// <param name="RowNumber">строка в которой идёт печать</param>
-        /// <param name="Value">значение для печати</param>
-        /// <param name="Type">Тип входных данных</param>
-        /// <param name="StyleIndex">стиль ячейки</param>
-        /// <param name="CanReWrite">разрешить перезапись данных (иначе при повторной записи в ячейку будет генерирование ошибки)</param>
-        public void PrintCells(
-            int FirstColumn, int LastPrintColumn, uint RowNumber, string Value, CellValues Type = CellValues.String, uint StyleIndex = 0,
-            bool CanReWrite = false)
-        {
-            foreach (var i in Enumerable.Range(FirstColumn, LastPrintColumn - FirstColumn + 1))
-            {
-                AddCell(Value, (uint)i, RowNumber, StyleIndex, Type, CanReWrite);
-            }
-        }
+        #endregion
 
         #region Rows
 
@@ -278,6 +286,12 @@ namespace OpenXmlEx
         /// <param name="AddSkipedRows">Добавить пропущенные строки (если пишем 2-ю строку, а первую не записали - будет ошибка)</param>
         public void AddRow(uint RowIndex, uint CollapsedLvl = 0, bool ClosePreviousIfOpen = false, bool AddSkipedRows = false)
         {
+            if (!SheetIsOpen)
+            {
+                WriteStartElement(new SheetData());
+                SheetIsOpen = true;
+            }
+
             switch (ClosePreviousIfOpen)
             {
                 case true when _Rows.Count > 0:
@@ -323,7 +337,29 @@ namespace OpenXmlEx
 
         #endregion
 
+        #region Filter
 
+        /// <summary>
+        /// Установка фильтра
+        /// </summary>
+        private Action AddFiltertoSheet { get; set; }
+
+        /// <summary> отложенная установка фильтра на колонки (ставить в конце листа перед закрытием)</summary>
+        /// установит фильтр перед закрытием документа
+        /// <param name="ListName">Имя листа</param>
+        /// <param name="FirstColumn">первая колонка</param>
+        /// <param name="LastColumn">последняя колонка</param>
+        /// <param name="FirstRow">первая строка</param>
+        /// <param name="LastRow">последняя строка</param>
+        public void SetFilter(string ListName, uint FirstColumn, uint LastColumn, uint FirstRow, uint? LastRow = null)
+        {
+
+            if (AddFiltertoSheet is not null)
+                throw new SheetException("Secondary set Filter to the sheet", ListName, nameof(SetFilter));
+
+            AddFiltertoSheet = () => InsertFilter(ListName, FirstColumn, LastColumn, FirstRow, LastRow ?? FirstRow);
+
+        }
         /// <summary> Устанавливает фильтр на колонки (ставить в конце листа перед закрытием)</summary>
         /// Позиционировать обязательно в конце страницы после закрытия блока SheetData
         /// перед закрытием блока WorkSheet и MergedList
@@ -332,13 +368,12 @@ namespace OpenXmlEx
         /// <param name="LastColumn">последняя колонка</param>
         /// <param name="FirstRow">первая строка</param>
         /// <param name="LastRow">последняя строка</param>
-        public void SetFilter(string ListName, uint FirstColumn, uint LastColumn, uint FirstRow, uint? LastRow = null)
+        public void InsertFilter(string ListName, uint FirstColumn, uint LastColumn, uint FirstRow, uint LastRow)
         {
-            WriteElement(new AutoFilter { Reference = $"{OpenXmlExHelper.GetColumnName(FirstColumn)}{FirstRow}:{OpenXmlExHelper.GetColumnName(LastColumn)}{LastRow ?? FirstRow}" });
+            WriteElement(new AutoFilter { Reference = $"{OpenXmlExHelper.GetColumnName(FirstColumn)}{FirstRow}:{OpenXmlExHelper.GetColumnName(LastColumn)}{LastRow}" });
             // не забыть в конце листа утвердить в конце листа
-            ApprovalFilter(ListName, FirstColumn, LastColumn, FirstRow, LastRow ?? FirstRow);
+            ApprovalFilter(ListName, FirstColumn, LastColumn, FirstRow, LastRow);
         }
-
         /// <summary> Утверждение секции фильтра на листе </summary>
         /// <param name="ListName">Имя листа</param>
         /// <param name="FirstColumn">первая колонка</param>
@@ -360,19 +395,23 @@ namespace OpenXmlEx
             WriteEndElement(); //Filter
         }
 
+        #endregion
+
+
         /// <summary>
         /// Устанавливает объединенные ячейки на листе
         /// Позиционировать обязательно в конце страницы после закрытия блока SheetData
         /// после блока фильтров но до закрытия блока WorkSheet
         /// </summary>
-        /// <param name="MergedCells">перечень объединенных ячеек</param>
-        public void SetMergedList()
+        private void SetMergedList()
         {
+            if (_MergedCells.Count == 0)
+                return;
+
             WriteStartElement(new MergeCells());
             foreach (var mer in _MergedCells) WriteElement(mer.Value);
             WriteEndElement();
         }
-
 
         #endregion
 
@@ -408,41 +447,12 @@ namespace OpenXmlEx
         /// <param name="EndCell">колонка конца диапазона</param>
         /// <param name="EndRow">строка конца диапазона (если не указано то также что и начало)</param>
         /// <returns></returns>
-        public void MergeCells(int StartCell, uint StartRow, int EndCell, uint? EndRow = null)
-            => MergeCells(new OpenXmlMergedCellEx((uint)StartCell, StartRow, (uint)EndCell, EndRow ?? StartRow));
-
-        /// <summary>
-        /// Формирует объединенную ячейку для документа
-        /// </summary>
-        /// <param name="StartCell">колонка начала диапазона</param>
-        /// <param name="StartRow">строка начала диапазона</param>
-        /// <param name="EndCell">колонка конца диапазона</param>
-        /// <param name="EndRow">строка конца диапазона (если не указано то также что и начало)</param>
-        /// <returns></returns>
         public void MergeCells(uint StartCell, uint StartRow, uint EndCell, uint? EndRow = null)
             => MergeCells(new OpenXmlMergedCellEx(StartCell, StartRow, EndCell, EndRow ?? StartRow));
-
-        /// <summary>
-        /// Формирует объединенную ячейку для документа
-        /// </summary>
-        /// <param name="StartCell">колонка начала диапазона</param>
-        /// <param name="StartRow">строка начала диапазона</param>
-        /// <param name="EndCell">колонка конца диапазона</param>
-        /// <param name="EndRow">строка конца диапазона (если не указано то к что и начало)</param>
-        /// <returns></returns>
-        public void MergeCells(uint StartCell, int StartRow, uint EndCell, int? EndRow = null)
-            => MergeCells(new OpenXmlMergedCellEx(StartCell, (uint)StartRow, EndCell, EndRow is null ? (uint)StartRow : (uint)EndRow));
 
         #endregion
 
         #region Style Comparer
-
-        /// <summary>
-        /// Получить номер стиля похожего на искомый
-        /// </summary>
-        /// <param name="style">искомый стиль</param>
-        /// <returns></returns>
-        public uint FirstOrDefault(BaseOpenXmlExStyle style) => FindStyleOrDefault(style).Key;
 
         /// <summary>
         /// Получить стиль и его номер, похожего на искомый
@@ -497,5 +507,41 @@ namespace OpenXmlEx
         }
 
         #endregion
+
+        /// <summary> Закрытие рабочей зоны </summary>
+        private void CloseWorkPlace()
+        {
+            var (cell_key, cell_value) = _Cells.LastOrDefault();
+            if (!cell_key.Equals(default) && !cell_value)
+            {
+                _Cells[cell_key] = true;
+                WriteEndElement();
+            }
+            var (row_key, row_value) = _Rows.LastOrDefault();
+            if (row_key != default && !row_value)
+            {
+                CloseRow(row_key);
+            }
+            if (SheetIsOpen) //Если документ не закрыт - закрываем его
+            {
+                WriteEndElement(); // close SheetData
+                SheetIsOpen = false;
+            }
+
+        }
+        /// <summary> закрывает текущий лист для записи </summary>
+        private void CloseSheet()
+        {
+            CloseWorkPlace();
+
+            AddFiltertoSheet?.Invoke(); //Вписываем фильтр
+
+            SetMergedList(); //установка объединенных ячеек на листе
+
+            if (!WorksheetIsOpen) return;
+            WriteEndElement(); // close WorkSheet
+            WorksheetIsOpen = false;
+        }
+
     }
 }

@@ -40,7 +40,7 @@ namespace OpenXmlEx.Extensions
         /// <param name="EndCell">колонка конца диапазона</param>
         /// <param name="EndRow">строка конца диапазона (если не указано то также что и начало)</param>
         /// <returns></returns>
-        public MergeCell MergeCells(uint StartCell, uint StartRow, uint EndCell, uint? EndRow = null)
+        public static MergeCell MergeCells(uint StartCell, uint StartRow, uint EndCell, uint? EndRow = null)
             => new() { Reference = new StringValue($"{OpenXmlExHelper.GetColumnName(StartCell)}{StartRow}:{OpenXmlExHelper.GetColumnName(EndCell)}{EndRow ?? StartRow}") };
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace OpenXmlEx.Extensions
         /// <param name="EndCell">колонка конца диапазона</param>
         /// <param name="EndRow">строка конца диапазона (если не указано то к что и начало)</param>
         /// <returns></returns>
-        public MergeCell MergeCells(uint StartCell, int StartRow, uint EndCell, int? EndRow = null)
+        public static MergeCell MergeCells(uint StartCell, int StartRow, uint EndCell, int? EndRow = null)
             => new() { Reference = new StringValue($"{OpenXmlExHelper.GetColumnName(StartCell)}{StartRow}:{OpenXmlExHelper.GetColumnName(EndCell)}{EndRow ?? StartRow}") };
 
     }
