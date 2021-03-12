@@ -1,4 +1,6 @@
 ## OpenXmlEx
+Installation:
+Install-Package OpenXmlEx -Version 1.0.0
 
 ### EN
 Package wrapper OpenXML to facilitate the recording of heavy documents without allocating a large amount of memory
