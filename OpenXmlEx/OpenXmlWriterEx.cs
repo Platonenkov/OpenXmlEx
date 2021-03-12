@@ -4,10 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using OpenXmlEx.Errors;
 using OpenXmlEx.Errors.Actions;
 using OpenXmlEx.Errors.Cells;
 using OpenXmlEx.Errors.Rows;
@@ -23,22 +21,18 @@ namespace OpenXmlEx
 {
     public class OpenXmlWriterEx : OpenXmlPartWriter, IBaseWriter
     {
-        public static OpenXmlExStyles GetStyles(IEnumerable<BaseOpenXmlExStyle> styles) => new(styles);
-
-        public OpenXmlExStyles Style { get; private set; }
+        /// <summary> Стили для документа </summary>
+        public readonly OpenXmlExStyles Style;
 
         #region Статусы
 
-        /// <summary>
-        /// статус открыта ли новая секция документа
-        /// </summary>
+        /// <summary> статус открыта ли новая секция документа </summary>
         public bool WorksheetIsOpen { get; private set; }
-        /// <summary>
-        /// статус открыта ли лист для записи
-        /// </summary>
+        /// <summary> статус открыта ли лист для записи </summary>
         public bool SheetIsOpen { get; private set; }
-
+        /// <summary> Группировка была установлена </summary>
         public bool GroupingWasSet { get; private set; }
+        /// <summary> Ширина ячеек была задана </summary>
         public bool WidthWasSet { get; private set; }
         #endregion
 
@@ -50,25 +44,22 @@ namespace OpenXmlEx
         public OpenXmlWriterEx(
             OpenXmlPart OpenXmlPart,
             OpenXmlExStyles styles)
-            : base(OpenXmlPart) => InitStyles(styles);
+            : base(OpenXmlPart) => Style = styles;
 
         /// <inheritdoc />
         public OpenXmlWriterEx(OpenXmlPart OpenXmlPart, Encoding encoding,
             OpenXmlExStyles styles)
-            : base(OpenXmlPart, encoding) => InitStyles(styles);
+            : base(OpenXmlPart, encoding) => Style = styles;
 
         /// <inheritdoc />
         public OpenXmlWriterEx(Stream PartStream,
             OpenXmlExStyles styles)
-            : base(PartStream) => InitStyles(styles);
+            : base(PartStream) => Style = styles;
 
         /// <inheritdoc />
         public OpenXmlWriterEx(Stream PartStream, Encoding encoding,
             OpenXmlExStyles styles)
-            : base(PartStream, encoding) => InitStyles(styles);
-
-        private void InitStyles(OpenXmlExStyles styles)
-            => Style = styles;
+            : base(PartStream, encoding) => Style = styles;
 
         #endregion
 
@@ -78,25 +69,22 @@ namespace OpenXmlEx
         public OpenXmlWriterEx(
             OpenXmlPart OpenXmlPart,
             IEnumerable<BaseOpenXmlExStyle> styles)
-            : base(OpenXmlPart) => InitStyles(styles);
+            : base(OpenXmlPart) => Style = new OpenXmlExStyles(styles);
 
         /// <inheritdoc />
         public OpenXmlWriterEx(OpenXmlPart OpenXmlPart, Encoding encoding,
             IEnumerable<BaseOpenXmlExStyle> styles)
-            : base(OpenXmlPart, encoding) => InitStyles(styles);
+            : base(OpenXmlPart, encoding) => Style = new OpenXmlExStyles(styles);
 
         /// <inheritdoc />
         public OpenXmlWriterEx(Stream PartStream,
             IEnumerable<BaseOpenXmlExStyle> styles)
-            : base(PartStream) => InitStyles(styles);
+            : base(PartStream) => Style = new OpenXmlExStyles(styles);
 
         /// <inheritdoc />
         public OpenXmlWriterEx(Stream PartStream, Encoding encoding,
             IEnumerable<BaseOpenXmlExStyle> styles)
-            : base(PartStream, encoding) => InitStyles(styles);
-
-        private void InitStyles(IEnumerable<BaseOpenXmlExStyle> styles)
-            => Style = new OpenXmlExStyles(styles);
+            : base(PartStream, encoding) => Style = new OpenXmlExStyles(styles);
 
         #endregion
 
@@ -416,16 +404,15 @@ namespace OpenXmlEx
         #endregion
 
         #region MergedCell
-
+        /// <summary> Словарь объединённых диапазонов ячеек </summary>
         private Dictionary<OpenXmlMergedCellEx, MergeCell> _MergedCells { get; } = new();
-        private void MergeCells(OpenXmlMergedCellEx merged)
-        {
-            if (_MergedCells.Keys.Any(
-                k => k.Equals(merged) || merged.StartRow > k.StartRow && merged.EndRow < k.EndRow || merged.EndRow > k.StartRow && merged.EndRow < k.EndRow))
-            {
 
-            }
-            _MergedCells.Add(merged, new() { Reference = new StringValue($"{OpenXmlExHelper.GetColumnName(merged.StartCell)}{merged.StartRow}:{OpenXmlExHelper.GetColumnName(merged.EndCell)}{merged.EndRow}") });
+        private void MergeCells(OpenXmlMergedCellEx new_range)
+        {
+            var in_range = _MergedCells.Keys.FirstOrDefault(c => CheckInRange(c, new_range));
+            if (in_range is not null)
+                throw new MergeCellException("Intersecting ranges detected", new_range, in_range, nameof(MergeCells));
+            _MergedCells.Add(new_range, new() { Reference = new StringValue($"{OpenXmlExHelper.GetColumnName(new_range.StartCell)}{new_range.StartRow}:{OpenXmlExHelper.GetColumnName(new_range.EndCell)}{new_range.EndRow}") });
         }
 
         /// <summary>
@@ -508,6 +495,62 @@ namespace OpenXmlEx
 
         #endregion
 
+        #region CheckMergedRange
+
+        /// <summary>
+        /// Области пересекаются
+        /// </summary>
+        /// <param name="old_range"></param>
+        /// <param name="new_range"></param>
+        /// <returns></returns>
+        private static bool CheckInRange(OpenXmlMergedCellEx old_range, OpenXmlMergedCellEx new_range) =>
+            CheckCell(old_range, new_range.StartRow, new_range.StartCell) ||
+            CheckCell(old_range, new_range.EndRow, new_range.EndCell) ||
+            CheckCell(new_range, old_range.StartRow, old_range.StartCell) ||
+            CheckCell(new_range, old_range.EndRow, old_range.EndCell);
+
+        /// <summary>
+        /// Ячейка внутри области координат
+        /// </summary>
+        /// <param name="range"></param>
+        /// <param name="point_x"></param>
+        /// <param name="point_y"></param>
+        /// <returns></returns>
+        private static bool CheckCell(OpenXmlMergedCellEx range, uint point_x, uint point_y) => CheckPoint(
+            range.StartRow, range.StartCell, range.EndRow, range.EndCell, point_x, point_y);
+
+        /// <summary>
+        /// Точка внутри области
+        /// </summary>
+        /// <param name="x1"></param>
+        /// <param name="y1"></param>
+        /// <param name="x2"></param>
+        /// <param name="y2"></param>
+        /// <param name="point_x"></param>
+        /// <param name="point_y"></param>
+        /// <returns></returns>
+        private static bool CheckPoint(uint x1, uint y1, uint x2, uint y2, uint point_x, uint point_y)
+        {
+            if (x2 < x1)
+                Swap(ref x1, ref x2);
+
+            if (y2 < y1)
+                Swap(ref y1, ref y2);
+            var res = point_x >= x1 && point_x <= x2 && point_y >= y1 && point_y <= y2;
+            return res;
+        }
+        /// <summary> Обмен значений </summary>
+        /// <param name="a">ссылка на 1 значение</param>
+        /// <param name="b">ссылка на 2 значение</param>
+        private static void Swap(ref uint a, ref uint b)
+        {
+            var t = a;
+            a = b;
+            b = t;
+        }
+
+
+        #endregion
         /// <summary> Закрытие рабочей зоны </summary>
         private void CloseWorkPlace()
         {

@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DocumentFormat.OpenXml.Spreadsheet;
 using OpenXmlEx.Styles;
 using OpenXmlEx.Styles.Base;
@@ -62,25 +59,6 @@ namespace OpenXmlEx
         /// <param name="Type">тип данных</param>
         /// <param name="CanReWrite">разрешить перезапись данных (иначе при повторной записи в ячейку будет генерирование ошибки)</param>
         public void AddCell(string text, uint CellNum, uint RowNum, uint StyleIndex = 0, CellValues Type = CellValues.String, bool CanReWrite = false);
-
-        ///// <summary> Печатает ячейки с одинаковым значением и стилем со столбца по столбец в одной и той же строке</summary>
-        ///// <param name="FirstColumn">колонка с которой начали печать</param>
-        ///// <param name="LastPrintColumn">последняя напечатанная колонка</param>
-        ///// <param name="RowNumber">строка в которой идёт печать</param>
-        ///// <param name="StyleIndex">стиль ячейки</param>
-        //public void PrintEmptyCells(int FirstColumn, int LastPrintColumn, uint RowNumber, uint StyleIndex = 0);
-
-        ///// <summary> Печатает ячейки с одинаковым значением и стилем со столбца по столбец в одной и той же строке</summary>
-        ///// <param name="FirstColumn">колонка с которой начали печать</param>
-        ///// <param name="LastPrintColumn">последняя напечатанная колонка</param>
-        ///// <param name="RowNumber">строка в которой идёт печать</param>
-        ///// <param name="Value">значение для печати</param>
-        ///// <param name="Type">Тип входных данных</param>
-        ///// <param name="StyleIndex">стиль ячейки</param>
-        ///// <param name="CanReWrite">разрешить перезапись данных (иначе при повторной записи в ячейку будет генерирование ошибки)</param>
-        //public void AddCellsSameData(
-        //    int FirstColumn, int LastPrintColumn, uint RowNumber, string Value, CellValues Type = CellValues.String, uint StyleIndex = 0,
-        //    bool CanReWrite = false);
 
         #endregion
 

@@ -1,7 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Color = System.Drawing.Color;
@@ -36,7 +33,7 @@ namespace OpenXmlEx.Styles
         /// <summary> Размер шрифта </summary>
         public double FontSize { get; set; }
         /// <summary> цвет шрифта </summary>
-        public KeyValuePair<System.Drawing.Color, string> FontColor { get; set; }
+        public KeyValuePair<Color, string> FontColor { get; set; }
         /// <summary> Имя шрифта </summary>
         public string FontName { get; set; }
         /// <summary> жирный или нет </summary>

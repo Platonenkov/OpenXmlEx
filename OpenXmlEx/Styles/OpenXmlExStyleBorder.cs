@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace OpenXmlEx.Styles

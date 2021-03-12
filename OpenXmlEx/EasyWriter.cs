@@ -2,14 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using OpenXmlEx.Errors;
-using OpenXmlEx.Errors.Actions;
 using OpenXmlEx.Errors.Sheets;
 using OpenXmlEx.Styles;
 using OpenXmlEx.Styles.Base;
@@ -23,8 +19,6 @@ namespace OpenXmlEx
         /// путь к файлу который записывается
         /// </summary>
         private readonly string _FilePath;
-        private bool _disposed;
-
 
         #region Документ
 
@@ -284,6 +278,8 @@ namespace OpenXmlEx
         }
 
         #region Dispose
+
+        private bool _disposed;
 
         /// <summary>
         /// Throw if object is disposed.

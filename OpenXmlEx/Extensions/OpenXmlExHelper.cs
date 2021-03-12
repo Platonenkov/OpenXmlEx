@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Spreadsheet;
 
@@ -51,11 +49,11 @@ namespace OpenXmlEx.Extensions
 
             var cell_ref = cell.CellReference;
             var column_name = string.Empty;
-            foreach (var simbol in cell_ref.Value)
+            foreach (var symbol in cell_ref.Value)
             {
-                if (!uint.TryParse(simbol.ToString(), out var r))
+                if (!uint.TryParse(symbol.ToString(), out _))
                 {
-                    column_name += simbol;
+                    column_name += symbol;
                 }
                 else
                     break;
