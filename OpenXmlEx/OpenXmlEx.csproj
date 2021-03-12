@@ -5,7 +5,7 @@
     <Authors>APlatonenkov</Authors>
     <Company>APlatonenkov</Company>
     <Description>Package wrapper OpenXML to facilitate the recording of heavy documents without allocating a large amount of memory
-Оболочка для OpenXML, приванная облегчить запись тяжёлых документов без выделения большого количества памяти</Description>
+Оболочка для OpenXML, призванная облегчить запись тяжёлых документов без выделения большого количества памяти</Description>
     <Copyright>https://github.com/Platonenkov</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/Platonenkov/OpenXmlEx</PackageProjectUrl>
