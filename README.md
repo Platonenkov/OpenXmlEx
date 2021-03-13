@@ -32,7 +32,7 @@ Where key is style number;
 
 #### 2 Create new EasyWriter
 ```C#
-    using var writer = new EasyWriter(FileName, styles);
+    using var writer = new EasyWriter(FilePath, styles);
 ```
 #### 3 Add Sheet
 ```C#
