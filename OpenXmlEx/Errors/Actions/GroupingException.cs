@@ -2,7 +2,7 @@
 
 namespace OpenXmlEx.Errors.Actions
 {
-    internal class GroupingException : Exception
+    public class GroupingException : Exception
     {
         public string MethodName { get; }
         public string SheetName { get; }

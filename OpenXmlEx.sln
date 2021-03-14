@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenXmlEx", "OpenXmlEx\OpenXmlEx.csproj", "{723450CA-E01E-4E9E-9862-F8CEB86FFEF3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample", "Sample\Sample.csproj", "{9F2974DB-C998-425C-88A6-E97F6A24F237}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample", "Sample\Sample.csproj", "{9F2974DB-C998-425C-88A6-E97F6A24F237}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenXmlExTests", "OpenXmlExTests\OpenXmlExTests.csproj", "{FE958BBE-256C-43F0-BDAB-9A88C6A3210C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{9F2974DB-C998-425C-88A6-E97F6A24F237}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F2974DB-C998-425C-88A6-E97F6A24F237}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F2974DB-C998-425C-88A6-E97F6A24F237}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE958BBE-256C-43F0-BDAB-9A88C6A3210C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE958BBE-256C-43F0-BDAB-9A88C6A3210C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE958BBE-256C-43F0-BDAB-9A88C6A3210C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE958BBE-256C-43F0-BDAB-9A88C6A3210C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

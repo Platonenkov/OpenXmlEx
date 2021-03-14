@@ -176,7 +176,11 @@ namespace OpenXmlEx
 
         /// <summary> Закрыть строку </summary>
         /// <param name="RowNumber">Номер строки</param>
-        public void CloseRow(uint RowNumber) => _Writer.CloseRow(RowNumber);
+        public void CloseRow(uint RowNumber)
+        {
+            CheckForError(nameof(AddRow));
+            _Writer.CloseRow(RowNumber);
+        }
 
         #endregion
 
@@ -264,7 +268,7 @@ namespace OpenXmlEx
         /// <param name="style">искомый стиль</param>
         /// <returns></returns>
 
-        public KeyValuePair<uint, OpenXmlExStyleCell> FindStyleOrDefault(BaseOpenXmlExStyle style) => _Writer.FindStyleOrDefault(style);
+        public KeyValuePair<uint, OpenXmlExStyleCell> FindStyleOrDefault(BaseOpenXmlExStyle style) => _Styles.FindStyleOrDefault(style);
 
         #endregion
 
@@ -291,7 +295,7 @@ namespace OpenXmlEx
         public void Close()
         {
             _Writer?.Close();
-            _Document.Close();
+            _Document?.Close();
         }
 
         #region Dispose

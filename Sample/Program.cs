@@ -162,12 +162,31 @@ namespace Sample
             var wbsp = workbook_part.AddNewPart<WorkbookStylesPart>();
 
             #region Styles
+            var style = new BaseOpenXmlExStyle()
+            {
+                FontColor = System.Drawing.Color.Red,
+                BorderColor = System.Drawing.Color.Blue,
+                BottomBorderStyle = BorderStyleValues.DashDot,
+                FillColor = System.Drawing.Color.Gray,
+                FillPattern = PatternValues.DarkDown,
+                FontName = "Tahoma",
+                FontSize = 14,
+                HorizontalAlignment = HorizontalAlignmentValues.Center,
+                IsBoldFont = true,
+                IsItalicFont = true,
+                LeftBorderStyle = BorderStyleValues.Dashed,
+                RightBorderStyle = BorderStyleValues.Double,
+                TopBorderStyle = BorderStyleValues.Medium,
+                VerticalAlignment = VerticalAlignmentValues.Top,
+                WrapText = true
+            };
 
             var styles = new OpenXmlExStyles(
                 new List<BaseOpenXmlExStyle>()
                 {
                     new BaseOpenXmlExStyle() {FontColor = System.Drawing.Color.Crimson, IsBoldFont = true},
-                    new BaseOpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = System.Drawing.Color.Red}
+                    new BaseOpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = System.Drawing.Color.Red},
+                    style
                 });
 
             wbsp.Stylesheet = styles.Styles;
@@ -229,11 +248,21 @@ namespace Sample
             var (key, value) = writer.FindStyleOrDefault(
                 new BaseOpenXmlExStyle()
                 {
-                    FontColor = System.Drawing.Color.Crimson,
-                    //FontSize = 20,
-                    //IsBoldFont = true,
-                    //LeftBorderStyle =  BorderStyleValues.Dashed,
-                    //RightBorderStyle = BorderStyleValues.Dashed
+                    FontColor = System.Drawing.Color.Red,
+                    BorderColor = System.Drawing.Color.Blue,
+                    BottomBorderStyle = BorderStyleValues.DashDot,
+                    FillColor = System.Drawing.Color.Gray,
+                    FillPattern = PatternValues.DarkDown,
+                    FontName = "Tahoma",
+                    FontSize = 14,
+                    HorizontalAlignment = HorizontalAlignmentValues.Center,
+                    IsBoldFont = true,
+                    IsItalicFont = true,
+                    LeftBorderStyle = BorderStyleValues.Dashed,
+                    RightBorderStyle = BorderStyleValues.Double,
+                    TopBorderStyle = BorderStyleValues.Medium,
+                    VerticalAlignment = VerticalAlignmentValues.Top,
+                    WrapText = true
                 });
 
             writer.AddRow(3, 0, false, true);

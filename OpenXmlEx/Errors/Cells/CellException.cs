@@ -2,7 +2,7 @@
 
 namespace OpenXmlEx.Errors.Cells
 {
-    internal class CellException : Exception
+    public class CellException : Exception
     {
         /// <summary> Номер строки вызвавшей ошибку </summary>
         public uint RowNumder { get; set; }

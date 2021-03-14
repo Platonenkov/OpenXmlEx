@@ -3,7 +3,7 @@ using Color = System.Drawing.Color;
 
 namespace OpenXmlEx.Styles.Base
 {
-    public class BaseOpenXmlExStyle
+    public record BaseOpenXmlExStyle
     {
         #region Заливка
 
