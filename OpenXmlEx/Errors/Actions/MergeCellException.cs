@@ -3,7 +3,7 @@ using OpenXmlEx.SubClasses;
 
 namespace OpenXmlEx.Errors.Actions
 {
-    internal class MergeCellException : Exception
+    public class MergeCellException : Exception
     {
         /// <summary> пересечение с диапазоном </summary>
         public OpenXmlMergedCellEx InRange;

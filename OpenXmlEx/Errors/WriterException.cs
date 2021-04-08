@@ -2,7 +2,7 @@
 
 namespace OpenXmlEx.Errors
 {
-    internal class WriterException : Exception
+    public class WriterException : Exception
     {
         public string MethodName { get; }
         public string SheetName { get; }

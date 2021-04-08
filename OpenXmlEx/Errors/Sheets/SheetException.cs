@@ -2,7 +2,7 @@
 
 namespace OpenXmlEx.Errors.Sheets
 {
-    internal class SheetException : Exception
+    public class SheetException : Exception
     {
         public string SheetName { get; }
         public string MethodName { get; }

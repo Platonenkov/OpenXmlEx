@@ -2,7 +2,7 @@
 
 namespace OpenXmlEx.Errors.Actions
 {
-    internal class FilterException : Exception
+    public class FilterException : Exception
     {
         public string MethodName { get; }
         public string SheetName { get; }

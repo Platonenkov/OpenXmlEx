@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -237,7 +238,7 @@ namespace OpenXmlEx
             {
                 //Если строка закрыта
                 if (row_is_closed)
-                    throw new CellException("Row was closed, but you try write to cell", RowNum, CellNum, OpenXmlExHelper.GetColumnName(CellNum), nameof(AddCell));
+                    throw new RowNotOpenException($"Row was closed, but you try write to cell:{OpenXmlExHelper.GetColumnName(CellNum)}{RowNum}", RowNum, nameof(AddCell));
 
                 //Если запись в ячейку выше (левее) текущей
                 var last_cell = _Cells.Keys.Where(k => k.row == RowNum).Select(s => s.cell).LastOrDefault(c => c > CellNum);
@@ -247,7 +248,7 @@ namespace OpenXmlEx
                         OpenXmlExHelper.GetColumnName(CellNum), nameof(AddCell));
             }
             else
-                throw new CellException("Row not added to document, before writing to cell", RowNum, CellNum, OpenXmlExHelper.GetColumnName(CellNum), nameof(AddCell));
+                throw new RowException($"Row not added to document, before writing to cell:{OpenXmlExHelper.GetColumnName(CellNum)}{RowNum}", RowNum,nameof(AddCell));
 
             #endregion
 
@@ -299,7 +300,7 @@ namespace OpenXmlEx
             }
 
             var previous = _Rows.Keys.LastOrDefault();
-            if (previous > 0 && RowIndex - 1 != previous && !AddSkipedRows)
+            if (RowIndex - 1 != previous && !AddSkipedRows)
                 throw new RowException($"Rows must go in order, Last used row was {previous}", RowIndex, nameof(AddRow));
             if (AddSkipedRows)
             {
@@ -320,10 +321,6 @@ namespace OpenXmlEx
             }
             else
                 throw new RowException("Row not added to document, but you try close it", RowIndex, nameof(CloseRow));
-
-            //if (_Rows.Last().Key is { } row_key && row_key != RowIndex)
-            //    throw new RowException(
-            //        $"The last row added does not match the one that should be closed, Last row number is {row_key}, but closed {RowIndex}", RowIndex);
 
             WriteEndElement(); //end of Row
             _Rows[RowIndex] = true;
@@ -357,7 +354,7 @@ namespace OpenXmlEx
             }
 
             if (AddFiltertoSheet is not null)
-                throw new SheetException("Secondary set Filter to the sheet", ListName, nameof(SetFilter));
+                throw new FilterException("Secondary set Filter to the sheet", ListName, nameof(SetFilter));
 
             AddFiltertoSheet = () => InsertFilter(FirstColumn, LastColumn, FirstRow, LastRow ?? FirstRow, ListName);
 
@@ -380,10 +377,15 @@ namespace OpenXmlEx
                 }
                 ListName = _SheetName; // Если имя было указано при создании Writer
             }
+            if (AddFiltertoSheet is not null)
+                throw new FilterException("Secondary set Filter to the sheet", ListName, nameof(SetFilter));
+            AddFiltertoSheet = ()=>{};
+
             WriteElement(new AutoFilter { Reference = $"{OpenXmlExHelper.GetColumnName(FirstColumn)}{FirstRow}:{OpenXmlExHelper.GetColumnName(LastColumn)}{LastRow}" });
             // не забыть в конце листа утвердить в конце листа
             ApprovalFilter(ListName, FirstColumn, LastColumn, FirstRow, LastRow);
         }
+
         /// <summary> Утверждение секции фильтра на листе </summary>
         /// <param name="ListName">Имя листа</param>
         /// <param name="FirstColumn">первая колонка</param>
@@ -469,52 +471,7 @@ namespace OpenXmlEx
         /// </summary>
         /// <param name="style">искомый стиль</param>
         /// <returns></returns>
-
-        public KeyValuePair<uint, OpenXmlExStyleCell> FindStyleOrDefault(BaseOpenXmlExStyle style)
-        {
-            if (style is null) return default;
-
-            return Style.CellsStyles.FirstOrDefault(
-                s =>
-
-                #region Заливка
-
-                    (style.FillColor is null || s.Value.FillStyle.Value.FillColor.Key.Equals(style.FillColor)) &&
-                    (style.FillPattern is null || s.Value.FillStyle.Value.FillPattern == style.FillPattern) &&
-
-                #endregion
-
-                #region Borders
-
-                    (style.BorderColor is null || s.Value.BorderStyle.Value.BorderColor.Key.Equals(style.BorderColor)) &&
-                    (style.LeftBorderStyle is null || s.Value.BorderStyle.Value.LeftBorder.BorderStyle == style.LeftBorderStyle) &&
-                    (style.TopBorderStyle is null || s.Value.BorderStyle.Value.TopBorder.BorderStyle == style.TopBorderStyle) &&
-                    (style.RightBorderStyle is null || s.Value.BorderStyle.Value.RightBorder.BorderStyle == style.RightBorderStyle) &&
-                    (style.BottomBorderStyle is null || s.Value.BorderStyle.Value.BottomBorder.BorderStyle == style.BottomBorderStyle) &&
-
-                #endregion
-
-                #region Шрифт
-
-                    (style.FontSize is null || s.Value.FontStyle.Value.FontSize == style.FontSize) &&
-                    (style.FontColor is null || s.Value.FontStyle.Value.FontColor.Key.Equals(style.FontColor)) &&
-                    (string.IsNullOrWhiteSpace(style.FontName) || s.Value.FontStyle.Value.FontName == style.FontName) &&
-                    (style.IsBoldFont is null || s.Value.FontStyle.Value.IsBoldFont == style.IsBoldFont) &&
-                    (style.IsItalicFont is null || s.Value.FontStyle.Value.IsItalicFont == style.IsItalicFont) &&
-
-                #endregion
-
-                #region Выравнивание
-
-                    (style.WrapText is null || s.Value.WrapText == style.WrapText) &&
-                    (style.HorizontalAlignment is null || s.Value.HorizontalAlignment == style.HorizontalAlignment) &&
-                    (style.VerticalAlignment is null || s.Value.VerticalAlignment == style.VerticalAlignment));
-
-            #endregion
-
-
-
-        }
+        public KeyValuePair<uint, OpenXmlExStyleCell> FindStyleOrDefault(BaseOpenXmlExStyle style) => Style.FindStyleOrDefault(style);
 
         #endregion
 

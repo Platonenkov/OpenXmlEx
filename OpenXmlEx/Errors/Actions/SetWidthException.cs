@@ -2,7 +2,7 @@
 
 namespace OpenXmlEx.Errors.Actions
 {
-    internal class SetWidthException : Exception
+    public class SetWidthException : Exception
     {
         public string SheetName { get; }
         public string MethodName { get; }
