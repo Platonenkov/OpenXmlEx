@@ -583,7 +583,7 @@ namespace OpenXmlEx
 В IsExternalInit тип включен только в net5.0(и будущие) целевые рамки.
 При компиляции для более старых целевых фреймворков вам нужно будет вручную определить этот тип. */
 
-namespace System.Runtime.CompilerServices
-{
-    internal static class IsExternalInit { }
-}
+//namespace System.Runtime.CompilerServices
+//{
+//    internal static class IsExternalInit { }
+//}
