@@ -114,6 +114,7 @@ namespace Sample
 
             var sheet_name_2 = "Sheet 2.0";
             writer.AddNewSheet(sheet_name_2);
+            //writer.SetFilter(1, 5, 3, 5);
 
             #region Надстройка страницы - кнопки группировки сверху
 
@@ -145,8 +146,7 @@ namespace Sample
 
             #region Secondary setting
 
-            writer.SetFilter(1, 5, 3, 5);
-
+            //writer.SetFilter(1, 5, 3, 5);
 
             #endregion
 
