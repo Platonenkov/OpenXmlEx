@@ -2,9 +2,9 @@ name: .NET
 
 on:
   push:
-    branches: [ dev ]
+    branches: [ master ]
   pull_request:
-    branches: [ dev ]
+    branches: [ master ]
 
 jobs:
   build:
@@ -17,9 +17,22 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.x
+        
     - name: Restore dependencies
       run: dotnet restore
+      
     - name: Build
       run: dotnet build --no-restore
+      
     - name: Test
       run: dotnet test --no-build --verbosity normal
+      
+    - name: Packing
+      run: dotnet pack https://github.com/Platonenkov/OpenXmlEx/OpenXmlEx/OpenXmlEx.csproj -c Release
+      
+    - name: Add Source
+      run: dotnet nuget add source https://nuget.pkg.github.com/Platonenkov/index.json -n github -u Platonenkov -p ${{secrets.GITHUB_TOKEN}} 
+   
+    - name: Push package
+      run: dotnet nuget push "**/*.nupkg" --skip-duplicate --source https://nuget.pkg.github.com/Platonenkov/index.json -k ${{secrets.GITHUB_TOKEN}}     
+  
