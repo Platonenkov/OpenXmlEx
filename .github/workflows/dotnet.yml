@@ -32,9 +32,6 @@ jobs:
           dotnet build OpenXmlEx/OpenXmlEx.csproj -c Release
           dotnet pack OpenXmlEx/OpenXmlEx.csproj -c Release
       
-    - name: Add Source
-      run: dotnet nuget add source https://nuget.pkg.github.com/Platonenkov/index.json -n github -u Platonenkov -p ${{secrets.GITHUB_TOKEN}} 
-   
     - name: Push package
       run: dotnet nuget push "**/*.nupkg" --skip-duplicate --source https://nuget.pkg.github.com/Platonenkov/index.json -k ${{secrets.GITHUB_TOKEN}}     
   
