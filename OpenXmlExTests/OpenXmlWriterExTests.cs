@@ -171,26 +171,6 @@ namespace OpenXmlEx.Tests
         }
 
         [TestMethod()]
-        public void InsertFilter_NoSheetName_Test()
-        {
-            Assert.ThrowsException<FilterException>(() =>
-            {
-                using var writer = BaseTestData.GetXmlWriterSheetTestData();
-                writer.InsertFilter(1, 1, 1, 1,"");
-            });
-        }
-        [TestMethod()]
-        public void InsertFilter_SecondarySet_Test()
-        {
-            Assert.ThrowsException<FilterException>(() =>
-            {
-                using var writer = BaseTestData.GetXmlWriterSheetTestData();
-                writer.InsertFilter(1, 1, 1, 1, "test_sheet");
-                writer.InsertFilter(1, 2, 1, 2, "test_sheet");
-            });
-        }
-
-        [TestMethod()]
         public void MergeCellsTest()
         {
             Assert.ThrowsException<MergeCellException>(() =>

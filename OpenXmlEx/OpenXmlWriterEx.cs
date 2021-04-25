@@ -356,7 +356,10 @@ namespace OpenXmlEx
             if (AddFiltertoSheet is not null)
                 throw new FilterException("Secondary set Filter to the sheet", ListName, nameof(SetFilter));
 
-            AddFiltertoSheet = () => InsertFilter(FirstColumn, LastColumn, FirstRow, LastRow ?? FirstRow, ListName);
+            AddFiltertoSheet = () =>
+            {
+                InsertFilter(FirstColumn, LastColumn, FirstRow, LastRow ?? FirstRow, ListName);
+            };
 
         }
         /// <summary> Устанавливает фильтр на колонки (ставить в конце листа перед закрытием)</summary>
@@ -367,7 +370,7 @@ namespace OpenXmlEx
         /// <param name="LastColumn">последняя колонка</param>
         /// <param name="FirstRow">первая строка</param>
         /// <param name="LastRow">последняя строка</param>
-        public void InsertFilter( uint FirstColumn, uint LastColumn, uint FirstRow, uint LastRow, string ListName)
+        private void InsertFilter( uint FirstColumn, uint LastColumn, uint FirstRow, uint LastRow, string ListName)
         {
             if (string.IsNullOrWhiteSpace(ListName))
             {
@@ -377,9 +380,6 @@ namespace OpenXmlEx
                 }
                 ListName = _SheetName; // Если имя было указано при создании Writer
             }
-            if (AddFiltertoSheet is not null)
-                throw new FilterException("Secondary set Filter to the sheet", ListName, nameof(SetFilter));
-            AddFiltertoSheet = ()=>{};
 
             WriteElement(new AutoFilter { Reference = $"{OpenXmlExHelper.GetColumnName(FirstColumn)}{FirstRow}:{OpenXmlExHelper.GetColumnName(LastColumn)}{LastRow}" });
             // не забыть в конце листа утвердить в конце листа
@@ -567,4 +567,23 @@ namespace OpenXmlEx
         }
 
     }
+}
+
+/* Это небольшая ошибка в Visual Studio 2019, которая еще не исправлена.
+Чтобы решить эту проблему, вам нужно добавить фиктивный класс с именем IsExternalInit с пространством имен System.Runtime.CompilerServices
+в любом месте вашего проекта. Это сработает.
+При написании библиотеки лучше всего сделать этот класс внутренним,
+иначе вы можете получить две библиотеки, каждая из которых определяет один и тот же тип. (16 ноября 2020 г.):
+
+Согласно ответу, который я получил от главного руководителя группы разработчиков языка C# Джареда Парсонса,
+указанная выше проблема не является ошибкой. Компилятор выдает эту ошибку,
+потому что мы компилируем код.NET 5 для более старой версии.NET Framework. См. Его сообщение ниже:
+Благодарим за то, что нашли время отправить отзыв.
+К сожалению, это не ошибка.
+В IsExternalInit тип включен только в net5.0(и будущие) целевые рамки.
+При компиляции для более старых целевых фреймворков вам нужно будет вручную определить этот тип. */
+
+namespace System.Runtime.CompilerServices
+{
+    internal static class IsExternalInit { }
 }
