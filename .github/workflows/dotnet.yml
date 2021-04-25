@@ -28,7 +28,7 @@ jobs:
       run: dotnet test --no-build --verbosity normal
       
     - name: Packing
-      run: dotnet pack https://github.com/Platonenkov/OpenXmlEx/OpenXmlEx/OpenXmlEx.csproj -c Release
+      run: dotnet pack OpenXmlEx/OpenXmlEx.csproj -c Release
       
     - name: Add Source
       run: dotnet nuget add source https://nuget.pkg.github.com/Platonenkov/index.json -n github -u Platonenkov -p ${{secrets.GITHUB_TOKEN}} 
