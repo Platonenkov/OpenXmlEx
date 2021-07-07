@@ -47,7 +47,7 @@ namespace OpenXmlEx
         public EasyWriter(string FilePath, Encoding encoding, OpenXmlExStyles styles)
         {
             _FilePath = FilePath;
-            _Styles = styles;
+            _Styles = new OpenXmlExStyles(styles.BaseStyles);
             _Encoding = encoding;
             InitializeDocumentBaseBody(FilePath);
         }

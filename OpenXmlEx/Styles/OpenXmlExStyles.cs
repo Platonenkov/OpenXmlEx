@@ -49,6 +49,7 @@ namespace OpenXmlEx.Styles
                 }
             }
         };
+        public IEnumerable<BaseOpenXmlExStyle> BaseStyles { get; }
 
         #endregion
 
@@ -64,10 +65,26 @@ namespace OpenXmlEx.Styles
 
         public OpenXmlExStyles(IEnumerable<BaseOpenXmlExStyle> styles)
         {
-            GenerateStyles(styles);
+            if(styles is not null)
+            {
+                BaseStyles = styles;
+                GenerateStyles(BaseStyles);
+            } 
             _Styles = GetStylesheet();
 
         }
+        public OpenXmlExStyles(OpenXmlExStyles styles)
+        {
+            if (styles is not null)
+            {
+                BaseStyles = styles.BaseStyles;
+                GenerateStyles(BaseStyles);
+            }
+
+            _Styles = GetStylesheet();
+
+        }
+
 
         #endregion
 
