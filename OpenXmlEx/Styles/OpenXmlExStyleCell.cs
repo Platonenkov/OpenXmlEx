@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace OpenXmlEx.Styles
@@ -27,17 +26,6 @@ namespace OpenXmlEx.Styles
         /// <summary> Вертикальное выравнивание в ячейке </summary>
         public VerticalAlignmentValues VerticalAlignment { get; set; }
 
-        #endregion
-
-        #region Статические поля
-
-        private static IEnumerable<HorizontalAlignmentValues> __HAlign;
-        private static IEnumerable<HorizontalAlignmentValues> H_Align => __HAlign ??= Enum.GetValues<HorizontalAlignmentValues>();
-
-        private static IEnumerable<VerticalAlignmentValues> __VAlign;
-
-        private static IEnumerable<VerticalAlignmentValues> V_Align => __VAlign ??= Enum.GetValues<VerticalAlignmentValues>();
-        
         #endregion
 
         #region Генераторы

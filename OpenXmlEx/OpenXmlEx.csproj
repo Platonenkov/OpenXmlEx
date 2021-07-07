@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net5.0;</TargetFrameworks>
+    <TargetFrameworks>net5.0;netcoreapp3.1;net4.6.1-windows;net4.7-windows;net4.8-windows</TargetFrameworks>
     <LangVersion>latest</LangVersion>
-    <Authors>APlatonenkov</Authors>
-    <Company>APlatonenkov</Company>
+    <Authors>Platonenkov</Authors>
+    <Company>Platonenkov</Company>
     <Description>Package wrapper OpenXML to facilitate the recording of heavy documents without allocating a large amount of memory
 Оболочка для OpenXML, призванная облегчить запись тяжёлых документов без выделения большого количества памяти</Description>
     <Copyright>https://github.com/Platonenkov</Copyright>
@@ -14,15 +14,16 @@
     <RepositoryUrl>https://github.com/Platonenkov/OpenXmlEx</RepositoryUrl>
     <RepositoryType>GIT</RepositoryType>
     <PackageTags>OpenXML EasyWriter OpenXmlExtension OpenXmlEx</PackageTags>
-    <PackageReleaseNotes>Easy write big files in open xml</PackageReleaseNotes>
+    <PackageReleaseNotes>Multiplatform support added</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <SignAssembly>false</SignAssembly>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.0.1</Version>
+    <Version>2.0.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DocumentFormat.OpenXml" Version="2.12.3" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="2.12.2" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>
