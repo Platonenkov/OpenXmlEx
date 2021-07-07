@@ -1,6 +1,6 @@
 ## OpenXmlEx
 Installation:
-Install-Package OpenXmlEx -Version 1.0.0
+Install-Package OpenXmlEx -Version 2.0.0.0
 
 ### [ENG](https://github.com/Platonenkov/OpenXmlEx/blob/master/ENG.md)
 
