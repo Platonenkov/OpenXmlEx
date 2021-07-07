@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,7 +9,6 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using OpenXmlEx.Errors.Actions;
 using OpenXmlEx.Errors.Cells;
 using OpenXmlEx.Errors.Rows;
-using OpenXmlEx.Errors.Sheets;
 using OpenXmlEx.Extensions;
 using Column = DocumentFormat.OpenXml.Spreadsheet.Column;
 using Columns = DocumentFormat.OpenXml.Spreadsheet.Columns;
@@ -534,16 +532,16 @@ namespace OpenXmlEx
         /// <summary> Закрытие рабочей зоны </summary>
         private void CloseWorkPlace()
         {
-            var (cell_key, cell_value) = _Cells.LastOrDefault();
-            if (!cell_key.Equals(default) && !cell_value)
+            var cell = _Cells.LastOrDefault();
+            if (!cell.Key.Equals(default) && !cell.Value)
             {
-                _Cells[cell_key] = true;
+                _Cells[cell.Key] = true;
                 WriteEndElement();
             }
-            var (row_key, row_value) = _Rows.LastOrDefault();
-            if (row_key != default && !row_value)
+            var row = _Rows.LastOrDefault();
+            if (row.Key != default && !row.Value)
             {
-                CloseRow(row_key);
+                CloseRow(row.Key);
             }
             if (SheetIsOpen) //Если документ не закрыт - закрываем его
             {

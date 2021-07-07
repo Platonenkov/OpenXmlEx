@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace OpenXmlEx.Styles
@@ -20,8 +19,6 @@ namespace OpenXmlEx.Styles
         /// <summary> цвет рамки </summary>
         public KeyValuePair<System.Drawing.Color, string> BorderColor { get; set; }
 
-        /// <summary> Стили рамок </summary>
-        private static IEnumerable<BorderStyleValues> __BorderStyles;
 
         #region Конструкторы
 
@@ -36,8 +33,6 @@ namespace OpenXmlEx.Styles
         }
 
         #endregion
-        /// <summary> Стили рамок </summary>
-        private static IEnumerable<BorderStyleValues> BorderStyles => __BorderStyles ??= Enum.GetValues<BorderStyleValues>();
 
     }
 }

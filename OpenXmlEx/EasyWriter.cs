@@ -281,10 +281,10 @@ namespace OpenXmlEx
             ThrowIfObjectDisposed();
             if (_Writer is null)
                 throw new WriterException($"You have not Active Writer in document - {Path.GetFileName(_FilePath)}", null, methodName);
-            var (sheet, isClose) = _SheetDic.LastOrDefault();
-            if (isClose)
-                throw new WriterException("You sheet was closed, but you try write to it", sheet.sheet.Name, methodName);
-            if (sheet == default)
+            var data = _SheetDic.LastOrDefault();
+            if (data.Value)
+                throw new WriterException("You sheet was closed, but you try write to it", data.Key.sheet.Name, methodName);
+            if (data.Key == default)
                 throw new WriterException("You have not sheets to set settings", null, methodName);
 
         }

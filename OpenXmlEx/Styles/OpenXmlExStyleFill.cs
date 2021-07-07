@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Color = System.Drawing.Color;
@@ -32,15 +31,6 @@ namespace OpenXmlEx.Styles
 
         #endregion
 
-        #region Поля
-
-        /// <summary> Стили заливки </summary>
-        private static IEnumerable<PatternValues> __Patterns;
-        /// <summary> Стили заливки </summary>
-        private static IEnumerable<PatternValues> Patterns => __Patterns ??= Enum.GetValues<PatternValues>();
-
-        #endregion
-
         #region Генераторы
 
         /// <summary> Генерирует Default стиль заполнения </summary>
@@ -67,6 +57,7 @@ namespace OpenXmlEx.Styles
 
 
         #endregion
+
 
     }
 }

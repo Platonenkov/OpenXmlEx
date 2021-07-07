@@ -58,7 +58,7 @@ namespace OpenXmlEx.Extensions
                 else
                     break;
             }
-            var can_get_num = uint.TryParse(cell_ref.Value.Split(column_name).LastOrDefault(), out var row_number);
+            var can_get_num = uint.TryParse(cell_ref.Value.Split(new [] { column_name }, StringSplitOptions.None).LastOrDefault(), out var row_number);
             if (!can_get_num)
                 return default;
             lock (_Columns)
