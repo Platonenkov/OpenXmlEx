@@ -22,7 +22,7 @@ namespace Sample
 {
     class Program
     {
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
             var FileName = "test.xlsx";
             var fonts = new[] { "Times New Roman", "Calibri", "Arial" };
