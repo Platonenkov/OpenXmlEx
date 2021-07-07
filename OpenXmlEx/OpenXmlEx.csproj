@@ -14,7 +14,7 @@
     <RepositoryUrl>https://github.com/Platonenkov/OpenXmlEx</RepositoryUrl>
     <RepositoryType>GIT</RepositoryType>
     <PackageTags>OpenXML EasyWriter OpenXmlExtension OpenXmlEx</PackageTags>
-    <PackageReleaseNotes>Fix styles bag with static context</PackageReleaseNotes>
+    <PackageReleaseNotes>Fix styles bug with static context</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <SignAssembly>false</SignAssembly>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
