@@ -5,6 +5,8 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -28,22 +30,22 @@ namespace Sample
             var sizes = new[] { 8U, 10U, 12U, 14U, 16U };
 
             EasyWriterTest(FileName);
+            EasyWriterTest(FileName);
+            EasyWriterTest(FileName);
             //WriterTest(FileName);
-            new Process { StartInfo = new ProcessStartInfo(FileName) { UseShellExecute = true } }.Start();
+            //new Process { StartInfo = new ProcessStartInfo(FileName) { UseShellExecute = true } }.Start();
         }
 
-
-
+        private static OpenXmlExStyles Styles = new OpenXmlExStyles(
+        new List<BaseOpenXmlExStyle>()
+        {
+            new BaseOpenXmlExStyle() {FontColor = System.Drawing.Color.Crimson, IsBoldFont = true},
+            new BaseOpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = System.Drawing.Color.Red}
+        });
         static void EasyWriterTest(string FileName)
         {
-            var styles = new OpenXmlExStyles(
-                new List<BaseOpenXmlExStyle>()
-                {
-                    new BaseOpenXmlExStyle() {FontColor = System.Drawing.Color.Crimson, IsBoldFont = true},
-                    new BaseOpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = System.Drawing.Color.Red}
-                });
 
-            using var writer = new EasyWriter(FileName, styles);
+            using var writer = new EasyWriter(FileName, Styles);
 
 
 
