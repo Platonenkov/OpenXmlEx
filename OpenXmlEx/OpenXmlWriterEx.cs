@@ -107,7 +107,10 @@ namespace OpenXmlEx
             {
                 case Row row:
                     {
-                        _Rows.Add(row.RowIndex, closed);
+                        LastRowNumber =row.RowIndex;
+                        isRowOpen = !closed;
+                        LastCellNumber = 0;
+                        isCellOpen = false;
                         break;
                     }
                 case Cell cell:
@@ -115,7 +118,8 @@ namespace OpenXmlEx
                         var address = OpenXmlExHelper.GetCellAddress(cell);
                         if (address.Equals(default))
                             return;
-                        _Cells.Add((address.rowNum, address.collNum), closed);
+                        LastCellNumber = address.collNum;
+                        isCellOpen = !closed;
                         break;
                     }
                 case Worksheet:
@@ -202,11 +206,8 @@ namespace OpenXmlEx
 
         #region Cells
 
-        /// <summary>
-        /// Список записанных ячеек, со статусом (false - open, true - close)
-        /// ключ - (номер строки, номер ячейки)
-        /// </summary>
-        private readonly Dictionary<(uint row, uint cell), bool> _Cells = new();
+        private uint LastCellNumber;
+        private bool isCellOpen;
 
         /// <summary> Добавляет значение в ячейку документа </summary>
         /// <param name="text">текст для записи</param>
@@ -224,29 +225,27 @@ namespace OpenXmlEx
             {
                 throw new ArgumentException($"Address must be greater that 0, Row({RowNum}) and Cell({CellNum})");
             }
-            (uint row, uint cell) key = (RowNum, CellNum);
 
             //Проверка на перезапись данных
-            if (_Cells.TryGetValue(key, out var _) && !CanReWrite)
+            if (LastCellNumber == CellNum && LastRowNumber == RowNum && !CanReWrite)
             {
-                throw new CellException("Re-writing data to a cell", RowNum, CellNum, OpenXmlExHelper.GetColumnName(CellNum), nameof(AddCell));
+                throw new CellException($"Re-writing data to a cell ({RowNum}:{CellNum})", RowNum, CellNum, OpenXmlExHelper.GetColumnName(CellNum), nameof(AddCell));
             }
             // проверка на то что пишем в правильную строку
-            if (_Rows.TryGetValue(RowNum, out var row_is_closed))
+            if (LastRowNumber == RowNum)
             {
                 //Если строка закрыта
-                if (row_is_closed)
+                if (!isRowOpen)
                     throw new RowNotOpenException($"Row was closed, but you try write to cell:{OpenXmlExHelper.GetColumnName(CellNum)}{RowNum}", RowNum, nameof(AddCell));
 
                 //Если запись в ячейку выше (левее) текущей
-                var last_cell = _Cells.Keys.Where(k => k.row == RowNum).Select(s => s.cell).LastOrDefault(c => c > CellNum);
-                if (last_cell != default)
+                if (LastCellNumber > CellNum)
                     throw new CellException(
-                        $"Record in cell number {CellNum}, that above last recorded cell with number {last_cell} - not available", RowNum, CellNum,
+                        $"Record in cell number {CellNum}, that above last recorded cell with number {LastCellNumber} - not available", RowNum, CellNum,
                         OpenXmlExHelper.GetColumnName(CellNum), nameof(AddCell));
             }
             else
-                throw new RowException($"Row not added to document, before writing to cell:{OpenXmlExHelper.GetColumnName(CellNum)}{RowNum}", RowNum,nameof(AddCell));
+                throw new RowException($"You try insert data to wrong row number, current row: {LastRowNumber}, writing to cell:{OpenXmlExHelper.GetColumnName(CellNum)}{RowNum}", RowNum, nameof(AddCell));
 
             #endregion
 
@@ -264,10 +263,8 @@ namespace OpenXmlEx
 
         #region Rows
 
-        /// <summary>
-        /// Список записанных строк, со статусом (false - open, true - close)
-        /// </summary>
-        private readonly Dictionary<uint, bool> _Rows = new();
+        private uint LastRowNumber;
+        private bool isRowOpen;
 
         /// <summary>
         /// Создаёт новую строку в документе
@@ -287,24 +284,27 @@ namespace OpenXmlEx
 
             switch (ClosePreviousIfOpen)
             {
-                case true when _Rows.Count > 0:
+                case true when LastRowNumber != 0:
                     {
-                        var last_row = _Rows.Last().Key;
-                        CloseRow(last_row);
+                        CloseRow(LastRowNumber);
                         break;
                     }
-                case false when _Rows.Count > 0 && !_Rows.Last().Value:
+                case false when LastRowNumber != 0 && isRowOpen:
                     throw new RowNotClosedException("You must close the previous line before writing a new one", RowIndex, nameof(AddRow));
             }
 
-            var previous = _Rows.Keys.LastOrDefault();
-            if (RowIndex - 1 != previous && !AddSkipedRows)
-                throw new RowException($"Rows must go in order, Last used row was {previous}", RowIndex, nameof(AddRow));
+            if (RowIndex - 1 != LastRowNumber && !AddSkipedRows)
+                throw new RowException($"Rows must go in order, Last used row was {LastRowNumber}", RowIndex, nameof(AddRow));
             if (AddSkipedRows)
             {
-                for (var r = previous + 1; r < RowIndex; r++)
+                for (var r = LastRowNumber + 1; r < RowIndex; r++)
                     WriteElement(new Row { RowIndex = r });
             }
+            if(isCellOpen) //не закрыта ячейка
+                throw new CellException(
+                    $"Yuo start new row - {RowIndex} before close previous cell - {LastCellNumber}", LastRowNumber, LastCellNumber,
+                    OpenXmlExHelper.GetColumnName(LastCellNumber), nameof(AddCell));
+
             WriteStartElement(new Row { RowIndex = RowIndex }, OpenXmlExHelper.GetCollapsedAttributes(CollapsedLvl));
         }
 
@@ -312,16 +312,16 @@ namespace OpenXmlEx
         /// <param name="RowIndex">Номер строки</param>
         public void CloseRow(uint RowIndex)
         {
-            if (_Rows.TryGetValue(RowIndex, out var row_is_closed))
+            if (RowIndex == LastRowNumber)
             {
-                if (row_is_closed)
-                    throw new RowNotOpenException($"Row was closed, but you agane try close, Row - {RowIndex}", RowIndex, nameof(CloseRow));
+                if (!isRowOpen)
+                    throw new RowNotOpenException($"Row not open, but you try close, Row - {RowIndex}", RowIndex, nameof(CloseRow));
             }
             else
-                throw new RowException("Row not added to document, but you try close it", RowIndex, nameof(CloseRow));
+                throw new RowException($"You try close row {RowIndex}, but last is {LastRowNumber}", RowIndex, nameof(CloseRow));
 
             WriteEndElement(); //end of Row
-            _Rows[RowIndex] = true;
+            isRowOpen = false;
         }
 
         #endregion
@@ -331,7 +331,7 @@ namespace OpenXmlEx
         /// <summary>
         /// Установка фильтра
         /// </summary>
-        private Action AddFiltertoSheet { get; set; }
+        private Action AddFiltertoSheet;
 
         /// <summary> отложенная установка фильтра на колонки (ставить в конце листа перед закрытием)</summary>
         /// установит фильтр перед закрытием документа
@@ -368,7 +368,7 @@ namespace OpenXmlEx
         /// <param name="LastColumn">последняя колонка</param>
         /// <param name="FirstRow">первая строка</param>
         /// <param name="LastRow">последняя строка</param>
-        private void InsertFilter( uint FirstColumn, uint LastColumn, uint FirstRow, uint LastRow, string ListName)
+        private void InsertFilter(uint FirstColumn, uint LastColumn, uint FirstRow, uint LastRow, string ListName)
         {
             if (string.IsNullOrWhiteSpace(ListName))
             {
@@ -427,7 +427,7 @@ namespace OpenXmlEx
 
         #region MergedCell
         /// <summary> Словарь объединённых диапазонов ячеек </summary>
-        private Dictionary<OpenXmlMergedCellEx, MergeCell> _MergedCells { get; } = new();
+        private readonly Dictionary<OpenXmlMergedCellEx, MergeCell> _MergedCells = new();
         /// <summary> Формирует объединенную ячейку для документа </summary>
         /// <param name="new_range">новый диапазон для объединения</param>
         public void MergeCells(OpenXmlMergedCellEx new_range)
@@ -532,21 +532,34 @@ namespace OpenXmlEx
         /// <summary> Закрытие рабочей зоны </summary>
         private void CloseWorkPlace()
         {
-            var cell = _Cells.LastOrDefault();
-            if (!cell.Key.Equals(default) && !cell.Value)
+            if (LastCellNumber != 0 && isCellOpen)
             {
-                _Cells[cell.Key] = true;
                 WriteEndElement();
+                isCellOpen = false;
             }
-            var row = _Rows.LastOrDefault();
-            if (row.Key != default && !row.Value)
+            if (LastRowNumber != 0 && isRowOpen)
             {
-                CloseRow(row.Key);
+                CloseRow(LastRowNumber);
             }
             if (SheetIsOpen) //Если документ не закрыт - закрываем его
             {
                 WriteEndElement(); // close SheetData
                 SheetIsOpen = false;
+                //var cell = _Cells.LastOrDefault();
+                //if (!cell.Key.Equals(default) && !cell.Value)
+                //{
+                //    _Cells[cell.Key] = true;
+                //    WriteEndElement();
+                //}
+                //var row = _Rows.LastOrDefault();
+                //if (row.Key != default && !row.Value)
+                //{
+                //    CloseRow(row.Key);
+                //}
+                //if (SheetIsOpen) //Если документ не закрыт - закрываем его
+                //{
+                //    WriteEndElement(); // close SheetData
+                //    SheetIsOpen = false;
             }
 
         }
