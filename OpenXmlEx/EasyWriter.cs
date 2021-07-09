@@ -28,13 +28,13 @@ namespace OpenXmlEx
         /// <summary> стили для документа </summary>
         private readonly OpenXmlExStyles _Styles;
         /// <summary> созданный файл-документ </summary>
-        private SpreadsheetDocument _Document { get; set; }
+        private SpreadsheetDocument _Document;
         /// <summary> инструмент записи данных </summary>
-        private OpenXmlWriterEx _Writer { get; set; }
+        private OpenXmlWriterEx _Writer;
         /// <summary> текущая часть записываемого документа </summary>
-        private WorkbookPart _WorkbookPart { get; set; }
-        private Workbook _WorkBook { get; set; }
-        private Sheets _Sheets { get; set; }
+        private WorkbookPart _WorkbookPart;
+        private Workbook _WorkBook;
+        private Sheets _Sheets;
 
         #endregion
 
@@ -52,18 +52,18 @@ namespace OpenXmlEx
             InitializeDocumentBaseBody(FilePath);
         }
 
-        public EasyWriter(string FilePath, OpenXmlExStyles styles):this(FilePath,Encoding.UTF8,styles)
+        public EasyWriter(string FilePath, OpenXmlExStyles styles) : this(FilePath, Encoding.UTF8, styles)
         {
 
         }
-        public EasyWriter(string FilePath):this(FilePath, Encoding.UTF8, new OpenXmlExStyles())
+        public EasyWriter(string FilePath) : this(FilePath, Encoding.UTF8, new OpenXmlExStyles())
         {
         }
 
         public EasyWriter(string FilePath, Encoding encoding, IEnumerable<BaseOpenXmlExStyle> styles) : this(FilePath, encoding, new OpenXmlExStyles(styles))
         {
 
-        } 
+        }
         public EasyWriter(string FilePath, IEnumerable<BaseOpenXmlExStyle> styles) : this(FilePath, Encoding.UTF8, new OpenXmlExStyles(styles))
         {
 

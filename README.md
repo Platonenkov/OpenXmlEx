@@ -1,8 +1,8 @@
 ## OpenXmlEx
 Installation:
-Install-Package OpenXmlEx -Version 2.0.0.1
+Install-Package OpenXmlEx -Version 2.0.2.0
 
-### [ENG](https://github.com/Platonenkov/OpenXmlEx/blob/master/ENG.md)
+### [ENG](https://github.com/Platonenkov/OpenXmlEx/blob/dev/ENG.md)
 
 Оболочка для OpenXML, приванная облегчить запись тяжёлых документов без выделения большого количества памяти
 

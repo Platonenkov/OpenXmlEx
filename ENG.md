@@ -2,7 +2,7 @@
 Installation:
 Install-Package OpenXmlEx -Version 2.0.0.1
 
-### [RU](https://github.com/Platonenkov/OpenXmlEx/blob/master/README.md)
+### [RU](https://github.com/Platonenkov/OpenXmlEx/blob/dev/README.md)
 
 Package wrapper OpenXML to facilitate the recording of heavy documents without allocating a large amount of memory
 
