@@ -34,4 +34,4 @@ jobs:
       run: dotnet nuget push "**/*.nupkg" --skip-duplicate --source https://nuget.pkg.github.com/Platonenkov/index.json -k ${{secrets.GITHUB_TOKEN}}     
   
     - name: Publishing
-      run: dotnet nuget push OpenXmlEx/bin/Release/*.nupkg -k ${{ secrets.NuGetApiKey }} --skip-duplicate -s https://api.nuget.org/v3/index.json
+      run: dotnet nuget push OpenXmlEx/bin/Release/*.nupkg -k ${{ secrets.NUGETAPIKEY }} --skip-duplicate -s https://api.nuget.org/v3/index.json
