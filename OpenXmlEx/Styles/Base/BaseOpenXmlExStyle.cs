@@ -54,7 +54,11 @@ namespace OpenXmlEx.Styles.Base
         /// <summary> Вертикальное выравнивание в ячейке </summary>
         public VerticalAlignmentValues? VerticalAlignment { get; set; }
 
+        /// <summary> выравнивание текста </summary>
+        public uint TextRotation { get; set; }
 
         #endregion
+
+
     }
 }

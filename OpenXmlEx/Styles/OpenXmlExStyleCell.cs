@@ -26,6 +26,7 @@ namespace OpenXmlEx.Styles
         /// <summary> Вертикальное выравнивание в ячейке </summary>
         public VerticalAlignmentValues VerticalAlignment { get; set; }
 
+        public uint TextRotation { get; set; }
         #endregion
 
         #region Генераторы
@@ -38,7 +39,7 @@ namespace OpenXmlEx.Styles
         public OpenXmlExStyleCell(KeyValuePair<uint, OpenXmlExStyleFont> Font, 
             KeyValuePair<uint, OpenXmlExStyleFill> Fill,
             KeyValuePair<uint, OpenXmlExStyleBorderGrand> Border,
-            bool Wrap, HorizontalAlignmentValues h_align, VerticalAlignmentValues v_align)
+            bool Wrap, HorizontalAlignmentValues h_align, VerticalAlignmentValues v_align, uint textRotation)
         {
             FontStyle = Font;
             FillStyle = Fill;
@@ -46,12 +47,13 @@ namespace OpenXmlEx.Styles
             HorizontalAlignment = h_align;
             VerticalAlignment = v_align;
             WrapText = Wrap;
+            TextRotation = textRotation;
         }
 
         /// <summary> Генерирует стиль на основании данных класса </summary>
         /// <returns></returns>
         private CellFormat GetCellStyle() => new(
-                new Alignment() { Horizontal = HorizontalAlignment, Vertical = VerticalAlignment, WrapText = WrapText })
+                new Alignment() { Horizontal = HorizontalAlignment, Vertical = VerticalAlignment, WrapText = WrapText,TextRotation = TextRotation})
             { FontId = FontStyle.Key, FillId = FillStyle.Key, BorderId = BorderStyle.Key, ApplyFont = true };
 
         #endregion
