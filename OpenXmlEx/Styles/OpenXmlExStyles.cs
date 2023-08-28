@@ -1,7 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+
 using DocumentFormat.OpenXml.Spreadsheet;
+
 using OpenXmlEx.Styles.Base;
+
 using Color = System.Drawing.Color;
 
 namespace OpenXmlEx.Styles
@@ -14,12 +17,12 @@ namespace OpenXmlEx.Styles
 
 
         /// <summary> перечень всех комбинаций заливок стиля </summary>
-        public Dictionary<uint, OpenXmlExStyleFill> Fills { get; } = new() { { 0, OpenXmlExStyleFill.GetDefault() },{ 1, OpenXmlExStyleFill.GetDefault() } };
+        public Dictionary<uint, OpenXmlExStyleFill> Fills { get; } = new() { { 0, OpenXmlExStyleFill.GetDefault() }, { 1, OpenXmlExStyleFill.GetDefault() } };
 
         /// <summary> перечень всех комбинаций рамок стиля </summary>
-        public Dictionary<uint, OpenXmlExStyleBorderGrand> Borders { get; } = new() { { 0, OpenXmlExStyleBorderGrand.GetDefault() },{ 1, OpenXmlExStyleBorderGrand.GetDefault() } };
+        public Dictionary<uint, OpenXmlExStyleBorderGrand> Borders { get; } = new() { { 0, OpenXmlExStyleBorderGrand.GetDefault() }, { 1, OpenXmlExStyleBorderGrand.GetDefault() } };
         /// <summary> перечень всех генерированных стилей шрифта </summary>
-        public Dictionary<uint, OpenXmlExStyleFont> Fonts { get; } = new() { { 0, OpenXmlExStyleFont.GetDefault() },{ 1, OpenXmlExStyleFont.GetDefault() } };
+        public Dictionary<uint, OpenXmlExStyleFont> Fonts { get; } = new() { { 0, OpenXmlExStyleFont.GetDefault() }, { 1, OpenXmlExStyleFont.GetDefault() } };
 
         /// <summary> перечень всех генерированных стилей ячеек </summary>
         public Dictionary<uint, OpenXmlExStyleCell> CellsStyles { get; } = new()
@@ -65,11 +68,11 @@ namespace OpenXmlEx.Styles
 
         public OpenXmlExStyles(IEnumerable<BaseOpenXmlExStyle> styles)
         {
-            if(styles is not null)
+            if (styles is not null)
             {
                 BaseStyles = styles;
                 GenerateStyles(BaseStyles);
-            } 
+            }
             _Styles = GetStylesheet();
 
         }
@@ -130,7 +133,8 @@ namespace OpenXmlEx.Styles
                     new KeyValuePair<uint, OpenXmlExStyleBorderGrand>(borders_count, border),
                     style.WrapText ?? false,
                     style.HorizontalAlignment ?? HorizontalAlignmentValues.Left,
-                    style.VerticalAlignment ?? VerticalAlignmentValues.Center);
+                    style.VerticalAlignment ?? VerticalAlignmentValues.Center,
+                    style.TextRotation);
 
                 var cell_count = (uint)CellsStyles.Count;
                 CellsStyles.Add(cell_count, cells_format);
@@ -186,12 +190,12 @@ namespace OpenXmlEx.Styles
                     (style.FontColor is null || s.Value.FontStyle.Value.FontColor.Key.Equals(style.FontColor)) &&
                     (string.IsNullOrWhiteSpace(style.FontName) || s.Value.FontStyle.Value.FontName == style.FontName) &&
                     (style.IsBoldFont is null || s.Value.FontStyle.Value.IsBoldFont == style.IsBoldFont) &&
-                    (style.IsItalicFont is null || s.Value.FontStyle.Value.IsItalicFont == style.IsItalicFont) &&
+                    (style.IsItalicFont is null || s.Value.FontStyle.Value.IsItalicFont == style.IsItalicFont)
 
                 #endregion
 
                 #region Выравнивание
-
+                    && style.TextRotation == s.Value.TextRotation &&
                     (style.WrapText is null || s.Value.WrapText == style.WrapText) &&
                     (style.HorizontalAlignment is null || s.Value.HorizontalAlignment == style.HorizontalAlignment) &&
                     (style.VerticalAlignment is null || s.Value.VerticalAlignment == style.VerticalAlignment));

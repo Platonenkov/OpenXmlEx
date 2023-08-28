@@ -1,22 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-using DocumentFormat.OpenXml;
+﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using Microsoft.Win32.SafeHandles;
+
 using OpenXmlEx;
-using OpenXmlEx.Extensions;
 using OpenXmlEx.Styles;
 using OpenXmlEx.Styles.Base;
 using OpenXmlEx.SubClasses;
-using Color = DocumentFormat.OpenXml.Spreadsheet.Color;
+
+using System.Collections.Generic;
 
 namespace Sample
 {
@@ -29,7 +20,7 @@ namespace Sample
             var fills = new[] { System.Drawing.Color.BlueViolet, System.Drawing.Color.Crimson };
             var sizes = new[] { 8U, 10U, 12U, 14U, 16U };
 
-            EasyWriterTest(FileName);
+            WriterTest(FileName);
             EasyWriterTest(FileName);
             EasyWriterTest(FileName);
             //WriterTest(FileName);
@@ -39,7 +30,7 @@ namespace Sample
         private static OpenXmlExStyles Styles = new OpenXmlExStyles(
         new List<BaseOpenXmlExStyle>()
         {
-            new BaseOpenXmlExStyle() {FontColor = System.Drawing.Color.Crimson, IsBoldFont = true},
+            new BaseOpenXmlExStyle() {FontColor = System.Drawing.Color.Crimson, IsBoldFont = true, TextRotation = 90,HorizontalAlignment = HorizontalAlignmentValues.Center},
             new BaseOpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = System.Drawing.Color.Red}
         });
         static void EasyWriterTest(string FileName)
@@ -186,7 +177,7 @@ namespace Sample
             var styles = new OpenXmlExStyles(
                 new List<BaseOpenXmlExStyle>()
                 {
-                    new BaseOpenXmlExStyle() {FontColor = System.Drawing.Color.Crimson, IsBoldFont = true},
+                    new BaseOpenXmlExStyle() {FontColor = System.Drawing.Color.Crimson, IsBoldFont = true,TextRotation = 90},
                     new BaseOpenXmlExStyle() {FontSize = 20, FontName = "Calibri", BorderColor = System.Drawing.Color.Red},
                     style
                 });
